@@ -19,4 +19,4 @@ n8n self-hosted VPS · OpenAI GPT · Stripe ·
 Apify · Notion · Airtable · Slack · Gmail · JavaScript
 
 ## 📫 Contact
-LinkedIn : (ton lien)
+LinkedIn : [(Clique-ici)](https://www.linkedin.com/in/j%C3%A9r%C3%A9my-taverne-2679b4129/)
