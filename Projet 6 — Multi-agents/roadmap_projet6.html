@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 6 — Multi-Agents N8N</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --surface: #0f0f1e;
+  --border: #1e1e38;
+  --accent1: #ff6b35;
+  --accent2: #7b2fff;
+  --accent3: #00d4aa;
+  --text: #e8e8f0;
+  --muted: #555570;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; padding: 40px 20px; overflow-x: hidden; }
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.header { text-align: center; margin-bottom: 50px; position: relative; }
+.header .tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--accent1); border: 1px solid var(--accent1); padding: 4px 12px; border-radius: 2px; margin-bottom: 16px; letter-spacing: 2px; }
+.header h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; line-height: 1.1; }
+.header h1 span { color: var(--accent1); }
+.header p { color: var(--muted); font-size: 0.85rem; margin-top: 10px; font-family: 'DM Mono', monospace; }
+
+/* Architecture diagram */
+.arch { max-width: 700px; margin: 0 auto 50px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 28px; position: relative; overflow: hidden; }
+.arch::before { content: 'ARCHITECTURE'; position: absolute; top: 12px; right: 16px; font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; }
+.arch-title { font-size: 0.75rem; color: var(--accent3); font-family: 'DM Mono', monospace; margin-bottom: 20px; letter-spacing: 1px; }
+
+.agent-box { border-radius: 3px; padding: 12px 16px; margin: 8px 0; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.agent-master { background: linear-gradient(135deg, #1a0a2e, #2d0a5e); border: 1px solid var(--accent2); color: #c084fc; }
+.agent-sub { background: #0a1a14; border: 1px solid #1a4d38; color: var(--accent3); margin-left: 40px; font-weight: 400; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+.agent-trigger { background: #1a0f08; border: 1px solid #4d2a10; color: var(--accent1); }
+.arrow-down { text-align: center; color: var(--accent2); font-size: 1.2rem; margin: 4px 0; }
+.arrow-right { color: var(--accent2); margin-left: 20px; font-size: 0.9rem; }
+.sub-group { border-left: 2px solid var(--accent2); margin-left: 20px; padding-left: 10px; }
+
+/* Steps */
+.steps-container { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 2px; }
+.step { background: var(--surface); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; }
+.step:hover { border-color: var(--accent2); }
+.step-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; }
+.step-num { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); width: 24px; }
+.step-icon { font-size: 1.2rem; }
+.step-info { flex: 1; }
+.step-title { font-size: 0.95rem; font-weight: 700; }
+.step-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+.step-badge { font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 3px 8px; border-radius: 2px; white-space: nowrap; }
+.badge-new { background: #1a0a2e; color: var(--accent2); border: 1px solid var(--accent2); }
+.badge-known { background: #0a1a10; color: var(--accent3); border: 1px solid var(--accent3); }
+.badge-key { background: #1a0f08; color: var(--accent1); border: 1px solid var(--accent1); }
+.step-body { display: none; padding: 0 20px 20px 58px; border-top: 1px solid var(--border); }
+.step.open .step-body { display: block; }
+.step-body p { font-size: 0.82rem; color: #aaaacc; line-height: 1.8; margin-top: 14px; }
+.step-body .code { font-family: 'DM Mono', monospace; font-size: 0.75rem; background: #050508; border: 1px solid var(--border); border-radius: 3px; padding: 12px; margin-top: 12px; color: var(--accent3); line-height: 1.7; overflow-x: auto; }
+.step-body .highlight { color: var(--accent1); }
+.step-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.7rem; }
+.step.open .step-chevron { transform: rotate(90deg); color: var(--accent2); }
+
+/* Timeline bar */
+.timeline { max-width: 700px; margin: 30px auto 0; display: flex; gap: 2px; }
+.tl-item { flex: 1; background: var(--surface); border: 1px solid var(--border); padding: 10px; text-align: center; }
+.tl-item .tl-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); }
+.tl-item .tl-time { font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
+.tl-item.active { border-color: var(--accent1); }
+.tl-item.active .tl-time { color: var(--accent1); }
+
+.bottom-note { max-width: 700px; margin: 20px auto 0; background: #0a0a1e; border: 1px solid var(--accent2); border-radius: 3px; padding: 16px 20px; font-family: 'DM Mono', monospace; font-size: 0.78rem; color: #9090cc; line-height: 1.8; }
+.bottom-note strong { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="tag">PROJET 06 / N8N</div>
+  <h1>Multi-<span>Agents</span> IA</h1>
+  <p>// Un agent chef qui orchestre des sous-agents spécialisés</p>
+</div>
+
+<div class="arch">
+  <div class="arch-title">// WORKFLOW FINAL</div>
+
+  <div class="agent-box agent-trigger">⚡ Trigger — Nouveau email / Webhook / Manuel</div>
+  <div class="arrow-down">↓</div>
+  <div class="agent-box agent-master">🧠 AGENT CHEF — Orchestrateur (analyse + délègue)</div>
+  <div class="arrow-down">↓ délègue selon le contexte</div>
+  <div class="sub-group">
+    <div class="agent-box agent-sub">🔍 Sous-agent 1 — Recherche & qualification de leads</div>
+    <div class="agent-box agent-sub">✍️ Sous-agent 2 — Rédaction de contenu & emails</div>
+    <div class="agent-box agent-sub">📊 Sous-agent 3 — Analyse de données & reporting</div>
+    <div class="agent-box agent-sub">🛠️ Sous-agent 4 — Actions techniques (CRM, Calendar, Sheets)</div>
+  </div>
+  <div class="arrow-down">↓</div>
+  <div class="agent-box agent-trigger">📤 Résultats consolidés → Slack / Email / Google Sheets</div>
+</div>
+
+<div class="steps-container">
+
+  <div class="step open" id="s1">
+    <div class="step-header" onclick="toggle('s1')">
+      <div class="step-num">01</div>
+      <div class="step-icon">🧠</div>
+      <div class="step-info">
+        <div class="step-title">Comprendre l'architecture multi-agents</div>
+        <div class="step-sub">agent chef + sous-agents spécialisés</div>
+      </div>
+      <div class="step-badge badge-key">CONCEPT CLÉ</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Dans un système multi-agents, l'agent chef reçoit la tâche globale et décide quels sous-agents appeler. Chaque sous-agent est spécialisé dans un domaine précis — il fait une seule chose mais la fait très bien. C'est comme une équipe humaine : un manager qui délègue à des experts.</p>
+      <p>Dans N8N, les sous-agents sont d'autres workflows appelés via le node <span style="color:var(--accent1)">Call n8n Workflow Tool</span>. C'est le nouveau concept clé de ce projet !</p>
+    </div>
+  </div>
+
+  <div class="step" id="s2">
+    <div class="step-header" onclick="toggle('s2')">
+      <div class="step-num">02</div>
+      <div class="step-icon">⚙️</div>
+      <div class="step-info">
+        <div class="step-title">Créer l'agent chef (orchestrateur)</div>
+        <div class="step-sub">AI Agent + system prompt d'orchestration</div>
+      </div>
+      <div class="step-badge badge-known">CONNU ✓</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>L'agent chef utilise le même node AI Agent que le projet 5. La différence c'est le system prompt — au lieu d'utiliser des outils directs (Gmail, Notion...), il appelle des sous-agents via le node <span style="color:var(--accent1)">Call n8n Workflow</span>.</p>
+      <div class="code">System prompt agent chef :
+"Tu es un orchestrateur IA. Tu reçois des demandes
+et tu délègues à tes sous-agents spécialisés.
+- Tâche de recherche → appelle sous-agent-recherche
+- Tâche de rédaction → appelle sous-agent-redaction  
+- Tâche d'analyse → appelle sous-agent-analyse
+- Action technique → appelle sous-agent-actions"</div>
+    </div>
+  </div>
+
+  <div class="step" id="s3">
+    <div class="step-header" onclick="toggle('s3')">
+      <div class="step-num">03</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-info">
+        <div class="step-title">Sous-agent 1 — Recherche & leads</div>
+        <div class="step-sub">Apify + enrichissement + scoring</div>
+      </div>
+      <div class="step-badge badge-known">CONNU ✓</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Ce sous-agent reprend la logique du projet 1 — il sait chercher des leads, les enrichir et les scorer. Quand l'agent chef lui donne une cible ("trouve des agences marketing à Paris"), il exécute le pipeline complet et retourne les résultats.</p>
+    </div>
+  </div>
+
+  <div class="step" id="s4">
+    <div class="step-header" onclick="toggle('s4')">
+      <div class="step-num">04</div>
+      <div class="step-icon">✍️</div>
+      <div class="step-info">
+        <div class="step-title">Sous-agent 2 — Rédaction & contenu</div>
+        <div class="step-sub">GPT spécialisé en copywriting</div>
+      </div>
+      <div class="step-badge badge-new">NOUVEAU</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Un agent spécialisé uniquement dans la rédaction — emails de prospection, posts LinkedIn, résumés, propositions commerciales. Son system prompt est optimisé pour le copywriting. L'agent chef lui passe les infos et il retourne le texte rédigé.</p>
+      <div class="code">Input : { "type": "email_prospection", "entreprise": "Agence X", "contexte": "..." }
+Output : { "sujet": "...", "corps": "...", "cta": "..." }</div>
+    </div>
+  </div>
+
+  <div class="step" id="s5">
+    <div class="step-header" onclick="toggle('s5')">
+      <div class="step-num">05</div>
+      <div class="step-icon">🔗</div>
+      <div class="step-info">
+        <div class="step-title">Connecter les sous-agents à l'agent chef</div>
+        <div class="step-sub">Call n8n Workflow Tool — le node clé</div>
+      </div>
+      <div class="step-badge badge-new">NOUVEAU !</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Le node <span style="color:var(--accent1)">Call n8n Workflow Tool</span> permet à l'agent chef d'appeler n'importe quel autre workflow N8N comme un outil. C'est le vrai nouveau concept de ce projet — transformer des workflows en outils pour un agent !</p>
+      <div class="code">// Dans l'agent chef, chaque sous-agent devient un tool :
+Tool : "sous-agent-recherche"
+→ appelle le workflow "Sous-agent Recherche Leads"
+→ passe les paramètres
+→ reçoit les résultats</div>
+    </div>
+  </div>
+
+  <div class="step" id="s6">
+    <div class="step-header" onclick="toggle('s6')">
+      <div class="step-num">06</div>
+      <div class="step-icon">🧪</div>
+      <div class="step-info">
+        <div class="step-title">Tester le système complet</div>
+        <div class="step-sub">scénario réel : prospection automatisée</div>
+      </div>
+      <div class="step-badge badge-key">TEST FINAL</div>
+      <div class="step-chevron">▶</div>
+    </div>
+    <div class="step-body">
+      <p>On va tester avec un scénario réel : donner à l'agent chef la mission <span style="color:var(--accent3)">"Trouve 5 agences marketing à Lyon, rédige un email de prospection personnalisé pour chacune et envoie-les"</span>. L'agent chef va orchestrer les sous-agents automatiquement sans intervention humaine !</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="timeline">
+  <div class="tl-item active">
+    <div class="tl-label">ÉTAPE 1-2</div>
+    <div class="tl-time" style="color:var(--accent2)">~1h</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">ÉTAPE 3-4</div>
+    <div class="tl-time">~1h</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">ÉTAPE 5</div>
+    <div class="tl-time" style="color:var(--accent1)">~45min</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">TEST FINAL</div>
+    <div class="tl-time" style="color:var(--accent3)">~30min</div>
+  </div>
+</div>
+
+<div class="bottom-note">
+  <strong>// POURQUOI C'EST PUISSANT</strong><br>
+  Un système multi-agents peut traiter des tâches complexes impossibles pour un seul agent. Chaque sous-agent est optimisé pour son domaine → meilleure qualité. L'agent chef coordonne sans que tu aies à intervenir. C'est la vraie automatisation cognitive de niveau entreprise — exactement ce que les boîtes cherchent en 2026.
+</div>
+
+<script>
+function toggle(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+</script>
+</body>
+</html>

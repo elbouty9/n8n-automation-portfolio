@@ -1,0 +1,105 @@
+{
+  "name": "Sous-Agent Analyse Données",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5803e6b6-2d50-467c-aafe-7e75de568472",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en analyse de données commerciales.\n\nVoici les leads trouvés et les emails rédigés :\n{{ $json.query }}\n\nAnalyse ces données et retourne un rapport structuré.\n\nRetourne UNIQUEMENT ce JSON :\n{\"total_leads\": 0, \"leads_qualifies\": 0, \"score_moyen\": 0, \"meilleur_lead\": \"...\", \"recommandation\": \"...\"}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f2559285-e2f4-49fd-8368-4bb5ffa3ddca",
+      "name": "Analyse des leads ",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  try {\n    const parsed = JSON.parse(cleaned);\n    return { json: { \n      total_leads: parsed.total_leads,\n      leads_qualifies: parsed.leads_qualifies,\n      score_moyen: parsed.score_moyen,\n      meilleur_lead: parsed.meilleur_lead,\n      recommandation: parsed.recommandation\n    }};\n  } catch(e) {\n    return { json: { erreur: 'Parsing échoué', raw: raw }};\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "0780b818-fd3f-491d-8d39-4fa86ca1a664",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Analyse des leads ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyse des leads ": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SGqnpz8K4HptDcor",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "adb057d2-3022-4ede-bb5d-57dc5643b345",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "Ow1UHD2OyBCqh3DA",
+  "tags": []
+}

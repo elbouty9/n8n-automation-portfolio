@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 6 — Multi-Agents + Gestion d'erreurs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07070f;
+  --surface: #0d0d1c;
+  --border: #1a1a30;
+  --accent1: #ff4d6d;
+  --accent2: #6c63ff;
+  --accent3: #00e5a0;
+  --accent4: #ffb347;
+  --text: #e0e0f0;
+  --muted: #44445a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; padding: 40px 16px; }
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, #6c63ff0a 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, #ff4d6d08 0%, transparent 60%);
+  pointer-events: none;
+}
+.header { text-align: center; margin-bottom: 48px; }
+.header .eyebrow { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--accent2); letter-spacing: 3px; margin-bottom: 12px; }
+.header h1 { font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 800; line-height: 1; }
+.header h1 em { font-style: normal; color: var(--accent1); }
+.header .desc { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); margin-top: 14px; }
+.header .badges { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.badge { font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 4px 10px; border-radius: 2px; }
+.badge-new { background: #1a0a2e; color: var(--accent2); border: 1px solid #6c63ff44; }
+.badge-key { background: #1a0808; color: var(--accent1); border: 1px solid #ff4d6d44; }
+.badge-adv { background: #0a1a10; color: var(--accent3); border: 1px solid #00e5a044; }
+.arch-wrap { max-width: 720px; margin: 0 auto 48px; }
+.arch-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; margin-bottom: 12px; }
+.arch { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 24px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.node { border-radius: 4px; padding: 10px 16px; font-size: 0.82rem; display: flex; align-items: center; gap: 10px; width: 100%; }
+.node-trigger { background: #1a100a; border: 1px solid #ffb34766; color: var(--accent4); }
+.node-chef { background: linear-gradient(135deg, #0f0a2e, #1a0a3e); border: 1.5px solid var(--accent2); color: #b0aaff; font-weight: 700; }
+.node-sub { background: #080f14; border: 1px solid #00e5a033; color: var(--accent3); font-family: 'DM Mono', monospace; font-size: 0.75rem; }
+.node-error { background: #140808; border: 1px solid #ff4d6d33; color: var(--accent1); font-family: 'DM Mono', monospace; font-size: 0.75rem; }
+.node-out { background: #0a140a; border: 1px solid #00e5a066; color: var(--accent3); }
+.sub-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.err-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.arr { color: var(--accent2); font-size: 1rem; }
+.split-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); }
+.arch-sep { width: 100%; height: 1px; background: var(--border); }
+.steps-wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 3px; }
+.step { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.step:hover { border-color: #6c63ff66; }
+.step.open { border-color: #6c63ff88; }
+.step-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; cursor: pointer; }
+.step-n { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 20px; }
+.step-ico { font-size: 1.1rem; }
+.step-meta { flex: 1; }
+.step-title { font-size: 0.9rem; font-weight: 700; }
+.step-sub { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.step-tag { font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 2px 8px; border-radius: 2px; white-space: nowrap; }
+.tag-new { background: #1a0a2e; color: var(--accent2); }
+.tag-known { background: #0a1a10; color: var(--accent3); }
+.tag-key { background: #1a0808; color: var(--accent1); }
+.tag-adv { background: #1a1408; color: var(--accent4); }
+.step-arr { color: var(--muted); font-size: 0.65rem; transition: transform 0.2s; }
+.step.open .step-arr { transform: rotate(90deg); color: var(--accent2); }
+.step-body { display: none; padding: 0 18px 18px 50px; border-top: 1px solid var(--border); }
+.step.open .step-body { display: block; }
+.step-body p { font-size: 0.8rem; color: #9090b8; line-height: 1.9; margin-top: 14px; }
+.step-body p strong { color: var(--text); }
+.code-block { font-family: 'DM Mono', monospace; font-size: 0.72rem; background: #050508; border: 1px solid var(--border); border-radius: 3px; padding: 14px; margin-top: 12px; color: #7070a8; line-height: 1.8; overflow-x: auto; }
+.c1 { color: var(--accent3); }
+.c2 { color: var(--accent2); }
+.c3 { color: var(--accent1); }
+.c4 { color: var(--accent4); }
+.bottom { max-width: 720px; margin: 24px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bottom-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px; }
+.bc-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; }
+.bc-items { display: flex; flex-direction: column; gap: 5px; }
+.bc-item { font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-g { background: var(--accent3); }
+.dot-o { background: var(--accent4); }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="eyebrow">PROJET 06 · N8N · ADVANCED</div>
+  <h1>Multi-<em>Agents</em><br>+ Gestion d'erreurs</h1>
+  <div class="desc">// orchestration · sous-workflows · error handling · retry logic</div>
+  <div class="badges">
+    <span class="badge badge-new">Call n8n Workflow Tool</span>
+    <span class="badge badge-key">Error Trigger</span>
+    <span class="badge badge-adv">Retry Logic</span>
+    <span class="badge badge-new">Architecture Modulaire</span>
+  </div>
+</div>
+
+<div class="arch-wrap">
+  <div class="arch-label">// ARCHITECTURE FINALE</div>
+  <div class="arch">
+    <div class="node node-trigger">⚡ Trigger — Email / Webhook / Manuel</div>
+    <div class="arr">↓</div>
+    <div class="node node-chef">🧠 AGENT CHEF — Analyse la demande et délègue au bon sous-agent</div>
+    <div class="split-label">↓ appelle le bon sous-workflow selon le contexte ↓</div>
+    <div class="sub-row">
+      <div class="node node-sub">🔍 Sous-agent Recherche</div>
+      <div class="node node-sub">✍️ Sous-agent Rédaction</div>
+      <div class="node node-sub">📊 Sous-agent Analyse</div>
+      <div class="node node-sub">🛠️ Sous-agent Actions</div>
+    </div>
+    <div class="arch-sep"></div>
+    <div class="split-label">si erreur sur n'importe quel sous-agent →</div>
+    <div class="err-row">
+      <div class="node node-error">⚠️ Error Trigger → Log erreur</div>
+      <div class="node node-error">🔄 Retry × 3 → Fallback Slack</div>
+    </div>
+    <div class="arr">↓</div>
+    <div class="node node-out">📤 Résultats consolidés → Slack + Google Sheets</div>
+  </div>
+</div>
+
+<div class="steps-wrap">
+
+  <div class="step open" id="s1">
+    <div class="step-head" onclick="t('s1')">
+      <div class="step-n">01</div><div class="step-ico">🏗️</div>
+      <div class="step-meta">
+        <div class="step-title">Créer les 4 sous-workflows spécialisés</div>
+        <div class="step-sub">Execute Workflow Trigger · chacun fait une seule chose</div>
+      </div>
+      <div class="step-tag tag-new">NOUVEAU</div><div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Crée <strong>4 nouveaux workflows</strong> dans N8N. Chaque workflow démarre avec un <strong>Execute Workflow Trigger</strong> — c'est lui qui permet à l'agent chef de les appeler comme des fonctions.</p>
+      <div class="code-block">
+<span class="c1">Sous-agent 1</span> — "Recherche Leads"
+<span class="c4">Trigger :</span> Execute Workflow Trigger
+<span class="c4">Action :</span> Apify → GPT scoring → retourne les leads
+
+<span class="c1">Sous-agent 2</span> — "Rédaction Email"
+<span class="c4">Trigger :</span> Execute Workflow Trigger
+<span class="c4">Action :</span> GPT copywriting → retourne l'email rédigé
+
+<span class="c1">Sous-agent 3</span> — "Analyse Données"
+<span class="c4">Trigger :</span> Execute Workflow Trigger
+<span class="c4">Action :</span> Code node stats → retourne le rapport
+
+<span class="c1">Sous-agent 4</span> — "Actions CRM"
+<span class="c4">Trigger :</span> Execute Workflow Trigger
+<span class="c4">Action :</span> Airtable + Notion + Gmail
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="s2">
+    <div class="step-head" onclick="t('s2')">
+      <div class="step-n">02</div><div class="step-ico">🧠</div>
+      <div class="step-meta">
+        <div class="step-title">Créer l'agent chef orchestrateur</div>
+        <div class="step-sub">AI Agent + Call n8n Workflow Tool × 4</div>
+      </div>
+      <div class="step-tag tag-new">NOUVEAU !</div><div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>L'agent chef utilise le node <strong>AI Agent</strong> avec 4 tools de type <strong>Call n8n Workflow</strong>. Il reçoit une demande, analyse et appelle le bon sous-workflow automatiquement.</p>
+      <div class="code-block">
+<span class="c2">System prompt :</span>
+Tu es un orchestrateur IA expert.
+Tu délègues au bon sous-agent selon la demande.
+
+<span class="c4">Règles :</span>
+- Recherche leads/contacts → <span class="c1">sous-agent-recherche</span>
+- Rédiger email/post/texte → <span class="c1">sous-agent-redaction</span>
+- Analyser données/stats → <span class="c1">sous-agent-analyse</span>
+- Actions CRM/Calendar → <span class="c1">sous-agent-actions</span>
+
+Retourne toujours :
+{ "action": "...", "resultat": "...", "statut": "ok/erreur" }
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="s3">
+    <div class="step-head" onclick="t('s3')">
+      <div class="step-n">03</div><div class="step-ico">🔗</div>
+      <div class="step-meta">
+        <div class="step-title">Connecter via Call n8n Workflow Tool</div>
+        <div class="step-sub">le node clé de ce projet</div>
+      </div>
+      <div class="step-tag tag-key">CLÉ</div><div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Dans l'agent chef, chaque tool est un <strong>Call n8n Workflow Tool</strong> qui pointe vers un sous-workflow. C'est le nouveau node de ce projet !</p>
+      <div class="code-block">
+<span class="c2">Tool 1 :</span> "sous-agent-recherche"
+→ Workflow : <span class="c1">Sous-agent Recherche Leads</span>
+→ Input : { "cible": "agences marketing Paris", "limit": 5 }
+→ Output : { "leads": [...] }
+
+<span class="c2">Tool 2 :</span> "sous-agent-redaction"
+→ Workflow : <span class="c1">Sous-agent Rédaction Email</span>
+→ Input : { "entreprise": "...", "contexte": "..." }
+→ Output : { "sujet": "...", "corps": "..." }
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="s4">
+    <div class="step-head" onclick="t('s4')">
+      <div class="step-n">04</div><div class="step-ico">⚠️</div>
+      <div class="step-meta">
+        <div class="step-title">Gestion d'erreurs — Error Trigger + Retry</div>
+        <div class="step-sub">ce qui différencie un junior d'un senior</div>
+      </div>
+      <div class="step-tag tag-adv">AVANCÉ</div><div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Pour chaque sous-workflow, on ajoute un <strong>Error Trigger</strong> qui se déclenche si le workflow plante. Il log l'erreur, envoie une alerte Slack et relance automatiquement jusqu'à 3 fois.</p>
+      <div class="code-block">
+<span class="c3">Error Trigger</span> → se déclenche si le workflow plante
+↓
+<span class="c4">Code node</span> → extrait le message d'erreur
+↓
+<span class="c2">IF</span> retry_count &lt; 3
+├── <span class="c1">True</span>  → Wait 30s → Relance le workflow
+└── <span class="c3">False</span> → Log Google Sheets + Alerte Slack 🚨
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="s5">
+    <div class="step-head" onclick="t('s5')">
+      <div class="step-n">05</div><div class="step-ico">🧪</div>
+      <div class="step-meta">
+        <div class="step-title">Test complet — mission de prospection réelle</div>
+        <div class="step-sub">du début à la fin sans intervention humaine</div>
+      </div>
+      <div class="step-tag tag-known">TEST FINAL</div><div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>On donne à l'agent chef cette mission et on regarde s'il orchestre tout seul :</p>
+      <div class="code-block">
+<span class="c1">"Trouve 3 agences marketing à Paris,
+rédige un email de prospection personnalisé
+pour chacune et ajoute-les dans Airtable."</span>
+
+<span class="c4">L'agent chef va :</span>
+1. → <span class="c1">sous-agent-recherche</span> → 3 leads trouvés
+2. → <span class="c1">sous-agent-redaction</span> × 3 → 3 emails personnalisés
+3. → <span class="c1">sous-agent-actions</span> → ajout Airtable
+4. → Résumé Slack avec tout ce qui a été fait
+
+<span class="c3">Si erreur →</span> retry automatique → alerte si échec
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom">
+  <div class="bottom-card">
+    <div class="bc-label">// CE QUE TU APPRENDS</div>
+    <div class="bc-items">
+      <div class="bc-item"><div class="dot dot-g"></div>Call n8n Workflow Tool</div>
+      <div class="bc-item"><div class="dot dot-g"></div>Execute Workflow Trigger</div>
+      <div class="bc-item"><div class="dot dot-g"></div>Error Trigger</div>
+      <div class="bc-item"><div class="dot dot-g"></div>Retry logic avec Wait node</div>
+      <div class="bc-item"><div class="dot dot-g"></div>Architecture modulaire</div>
+    </div>
+  </div>
+  <div class="bottom-card">
+    <div class="bc-label">// CE QUE TU DIS EN ENTRETIEN</div>
+    <div class="bc-items">
+      <div class="bc-item"><div class="dot dot-o"></div>Architecture multi-agents N8N</div>
+      <div class="bc-item"><div class="dot dot-o"></div>Orchestration de sous-workflows</div>
+      <div class="bc-item"><div class="dot dot-o"></div>Gestion d'erreurs et retry logic</div>
+      <div class="bc-item"><div class="dot dot-o"></div>Fallback automatique si API fail</div>
+      <div class="bc-item"><div class="dot dot-o"></div>Monitoring avec alertes Slack</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function t(id) { document.getElementById(id).classList.toggle('open'); }
+</script>
+</body>
+</html>

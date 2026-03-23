@@ -1,0 +1,218 @@
+{
+  "name": "Sous-agent Actions CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f108080e-6e80-4922-8573-d7e1b8e2b6c2",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appiTvIT5NSYxYBwz",
+          "mode": "list",
+          "cachedResultName": "CRM Clients",
+          "cachedResultUrl": "https://airtable.com/appiTvIT5NSYxYBwz"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblgBSAeMiZAZoKyX",
+          "mode": "list",
+          "cachedResultName": "Leads Prospection",
+          "cachedResultUrl": "https://airtable.com/appiTvIT5NSYxYBwz/tblgBSAeMiZAZoKyX"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company": "={{ $json.company }}",
+            "website": "={{ $json.website }}",
+            "score": "={{ $json.score }}",
+            "email_sujet": "={{ $json.sujet }}",
+            "email_corps": "={{ $json.corps }}",
+            "Statut": "A contacter",
+            "address": "={{ $json.address }}"
+          },
+          "matchingColumns": [
+            "company"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_sujet",
+              "displayName": "email_sujet",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_corps",
+              "displayName": "email_corps",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Statut",
+              "displayName": "Statut",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "A contacter",
+                  "value": "A contacter"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "a2d07832-c876-42f0-95ca-31b861aa8554",
+      "name": "CRM ",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "CR6MOvzpZeF8LeRS",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.query;\n\n// Trouve chaque clé=valeur\nconst company = raw.match(/company=([^|]+)/)?.[1]?.trim() ?? '';\nconst website = raw.match(/website=([^|]+)/)?.[1]?.trim() ?? '';\nconst address = raw.match(/address=([^|]+)/)?.[1]?.trim() ?? '';\nconst score = raw.match(/score=([^|]+)/)?.[1]?.trim() ?? '';\nconst sujet = raw.match(/sujet=([^|]+)/)?.[1]?.trim() ?? '';\n// Le corps c'est tout ce qui reste après \"corps=\"\nconst corps = raw.match(/corps=(.+)$/s)?.[1]?.trim() ?? '';\n\nreturn [{\n  json: { company, website, address, score, sujet, corps }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "c1fe40f2-4b80-45d1-a847-1784e56aae83",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "CRM ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SGqnpz8K4HptDcor",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "114807b7-a525-4e6d-8f68-f33511c84b69",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "MGDAtDrGBYa00xm4",
+  "tags": []
+}

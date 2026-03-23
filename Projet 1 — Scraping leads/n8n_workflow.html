@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Workflow N8N - Prospection Automatisée</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+  h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #6b7280; font-size: 0.85rem; margin-bottom: 30px; }
+
+  .workflow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+  .step {
+    width: 100%;
+    max-width: 640px;
+    background: #1a1a2e;
+    border: 1.5px solid #2d2d4e;
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .step:hover { border-color: #7c3aed; background: #1e1e35; transform: translateX(4px); }
+  .step.active { border-color: #a78bfa; background: #1e1635; }
+
+  .step-header { display: flex; align-items: center; gap: 12px; }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+  }
+  .step-title { font-weight: 600; font-size: 0.95rem; }
+  .step-badge {
+    margin-left: auto; font-size: 0.7rem; padding: 2px 8px;
+    border-radius: 20px; font-weight: 600; white-space: nowrap;
+  }
+
+  .step-detail {
+    display: none; margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid #2d2d4e; font-size: 0.85rem; line-height: 1.7;
+  }
+  .step.active .step-detail { display: block; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .detail-card { background: #0f0f1a; border-radius: 8px; padding: 10px 12px; }
+  .detail-card h4 { font-size: 0.75rem; color: #a78bfa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .detail-card p { font-size: 0.82rem; color: #9ca3af; }
+
+  .arrow {
+    width: 2px; height: 28px; background: linear-gradient(#7c3aed, #4f46e5);
+    position: relative;
+  }
+  .arrow::after {
+    content: '▼'; position: absolute; bottom: -10px; left: 50%;
+    transform: translateX(-50%); color: #4f46e5; font-size: 0.7rem;
+  }
+
+  .tip { background: #14293d; border: 1px solid #1e4d6b; border-radius: 10px; padding: 12px 16px; margin-top: 20px; max-width: 640px; width: 100%; font-size: 0.82rem; color: #7dd3fc; }
+  .tip strong { color: #38bdf8; }
+
+  /* colors per step */
+  .s1 .step-num { background: #1e3a5f; color: #60a5fa; }
+  .s1 .step-badge { background: #1e3a5f; color: #60a5fa; }
+  .s2 .step-num { background: #2d1f5e; color: #a78bfa; }
+  .s2 .step-badge { background: #2d1f5e; color: #a78bfa; }
+  .s3 .step-num { background: #1f3d2b; color: #4ade80; }
+  .s3 .step-badge { background: #1f3d2b; color: #4ade80; }
+  .s4 .step-num { background: #3d2a0a; color: #fbbf24; }
+  .s4 .step-badge { background: #3d2a0a; color: #fbbf24; }
+  .s5 .step-num { background: #3d1f1f; color: #f87171; }
+  .s5 .step-badge { background: #3d1f1f; color: #f87171; }
+  .s6 .step-num { background: #1f3535; color: #2dd4bf; }
+  .s6 .step-badge { background: #1f3535; color: #2dd4bf; }
+  .s7 .step-num { background: #2d2814; color: #facc15; }
+  .s7 .step-badge { background: #2d2814; color: #facc15; }
+
+  .new-badge { background: #14532d; color: #4ade80; font-size: 0.65rem; padding: 1px 6px; border-radius: 10px; margin-left: 8px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<h1>🤖 Workflow N8N — Prospection Automatisée</h1>
+<p class="subtitle">Clique sur chaque étape pour voir les détails, outils et conseils</p>
+
+<div class="workflow">
+
+  <div class="step s1" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">🔍 Scraping & Collecte de Leads</div>
+      </div>
+      <div class="step-badge">Source</div>
+    </div>
+    <div class="step-detail">
+      <p>On récupère des leads depuis une ou plusieurs sources selon ta cible.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Outils N8N</h4>
+          <p>HTTP Request, Apify node, Phantombuster via webhook</p>
+        </div>
+        <div class="detail-card">
+          <h4>Sources recommandées</h4>
+          <p>LinkedIn Sales Nav, Apollo.io, Google Maps (pour locaux)</p>
+        </div>
+        <div class="detail-card">
+          <h4>Données à collecter</h4>
+          <p>Nom, poste, entreprise, email, LinkedIn URL, taille boîte</p>
+        </div>
+        <div class="detail-card">
+          <h4>Conseil débutant</h4>
+          <p>Commence avec Apollo.io — il a une API gratuite simple à brancher</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s2" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">🔄 Déduplication <span class="new-badge">AJOUT</span></div>
+      </div>
+      <div class="step-badge">Qualité</div>
+    </div>
+    <div class="step-detail">
+      <p>Avant tout traitement, on vérifie si le lead existe déjà dans le Google Sheet pour éviter les doublons et les relances embarrassantes.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Nœuds N8N</h4>
+          <p>Google Sheets (lookup) → IF node → Stop si doublon</p>
+        </div>
+        <div class="detail-card">
+          <h4>Clé de dédup</h4>
+          <p>Email (le plus fiable) ou LinkedIn URL</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s3" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">🧩 Enrichissement <span class="new-badge">AJOUT</span></div>
+      </div>
+      <div class="step-badge">Données+</div>
+    </div>
+    <div class="step-detail">
+      <p>On enrichit le profil avant de le scorer — un bon score nécessite de bonnes données.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Outils</h4>
+          <p>Hunter.io (email), Clearbit (gratuit limité), LinkedIn scrape</p>
+        </div>
+        <div class="detail-card">
+          <h4>Données utiles</h4>
+          <p>Levée de fonds récente, tech stack, offres d'emploi actives, news</p>
+        </div>
+        <div class="detail-card">
+          <h4>Signaux d'achat</h4>
+          <p>Recrutement actif = budget disponible. Nouveau poste = opportunité.</p>
+        </div>
+        <div class="detail-card">
+          <h4>N8N tip</h4>
+          <p>Chaîne HTTP Request → Set node pour structurer les données proprement</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s4" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">⭐ Scoring du Lead</div>
+      </div>
+      <div class="step-badge">IA / Logique</div>
+    </div>
+    <div class="step-detail">
+      <p>On attribue un score de 1 à 100 selon des critères pondérés. Deux approches possibles.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Approche règles (débutant)</h4>
+          <p>IF nodes en cascade : poste = CEO → +30pts, taille 10-50 → +20pts, etc.</p>
+        </div>
+        <div class="detail-card">
+          <h4>Approche IA (recommandée)</h4>
+          <p>GPT-4 via OpenAI node avec prompt structuré retournant un JSON avec score + raison</p>
+        </div>
+        <div class="detail-card">
+          <h4>Critères clés</h4>
+          <p>Titre/séniorité, taille entreprise, secteur, signaux d'achat, localisation</p>
+        </div>
+        <div class="detail-card">
+          <h4>Seuil de coupure</h4>
+          <p>Score &lt; 40 → archivé sans message. Score ≥ 40 → on continue.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s5" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">✍️ Génération du Message</div>
+      </div>
+      <div class="step-badge">IA</div>
+    </div>
+    <div class="step-detail">
+      <p>On génère un message hyper-personnalisé basé sur toutes les données collectées.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Nœud N8N</h4>
+          <p>OpenAI node (GPT-4o) avec prompt template utilisant les variables du lead</p>
+        </div>
+        <div class="detail-card">
+          <h4>Structure du message</h4>
+          <p>Hook personnalisé → Problème identifié → Valeur proposée → CTA clair</p>
+        </div>
+        <div class="detail-card">
+          <h4>Personnalisation</h4>
+          <p>Mentionner un article récent, une levée de fonds, un recrutement spécifique</p>
+        </div>
+        <div class="detail-card">
+          <h4>Variantes</h4>
+          <p>Génère 2-3 versions avec des tons différents → le scorer choisit</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s6" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">🎯 Scoring du Message</div>
+      </div>
+      <div class="step-badge">Qualité</div>
+    </div>
+    <div class="step-detail">
+      <p>On évalue chaque message généré avant de le valider — pas question d'envoyer quelque chose de moyen.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Critères d'évaluation</h4>
+          <p>Personnalisation réelle, clarté du CTA, longueur, absence de spam words</p>
+        </div>
+        <div class="detail-card">
+          <h4>Seuil</h4>
+          <p>Score &lt; 70 → régénère avec un prompt amélioré (loop). Score ≥ 70 → validé.</p>
+        </div>
+        <div class="detail-card">
+          <h4>Anti-boucle infinie</h4>
+          <p>Max 3 tentatives, ensuite → file d'attente manuelle pour review humaine</p>
+        </div>
+        <div class="detail-card">
+          <h4>N8N tip</h4>
+          <p>Utilise un Loop node ou un compteur dans le Set node pour limiter les itérations</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"></div>
+
+  <div class="step s7" onclick="toggle(this)">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div>
+        <div class="step-title">💾 Stockage & Suivi <span class="new-badge">AMÉLIORÉ</span></div>
+      </div>
+      <div class="step-badge">Output</div>
+    </div>
+    <div class="step-detail">
+      <p>On stocke tout dans Google Sheets avec une structure pensée pour le suivi et la boucle de feedback.</p>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h4>Colonnes essentielles</h4>
+          <p>Date, Nom, Email, Score lead, Score message, Message final, Statut, Réponse reçue</p>
+        </div>
+        <div class="detail-card">
+          <h4>Boucle de feedback</h4>
+          <p>Si réponse reçue → webhook → met à jour le statut → nourrit ton prompt de scoring</p>
+        </div>
+        <div class="detail-card">
+          <h4>Canaux d'envoi optionnels</h4>
+          <p>Gmail node, Lemlist via API, ou simplement colonne "À envoyer" manuellement</p>
+        </div>
+        <div class="detail-card">
+          <h4>Bonus</h4>
+          <p>Ajoute un onglet "Statistiques" avec formules pour tracker ton taux de réponse</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" style="margin: 20px auto 0;">
+  <strong>💡 Par où commencer ?</strong> Commence par l'étape 1 → 4 → 7 seulement. Un workflow simple qui fonctionne vaut mieux qu'un workflow parfait qui ne tourne pas. Ajoute les étapes 2, 3, 5, 6 une par une ensuite.
+</div>
+
+<script>
+function toggle(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+</script>
+</body>
+</html>

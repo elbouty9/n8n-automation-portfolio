@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 4 — Onboarding client automatisé</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #6b7280; font-size: 0.82rem; margin-bottom: 32px; }
+.workflow { max-width: 680px; margin: 0 auto 30px; background: #1a1a2e; border: 1.5px solid #2d2d4e; border-radius: 14px; padding: 20px; }
+.workflow h3 { color: #a78bfa; font-size: 0.9rem; margin-bottom: 14px; }
+.flow { display: flex; flex-direction: column; gap: 0; align-items: center; }
+.flow-step { width: 100%; background: #0f0f1a; border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; border-left: 3px solid #7c3aed; }
+.flow-arrow { color: #4f46e5; font-size: 0.8rem; margin: 4px 0; }
+.phases { display: flex; flex-direction: column; gap: 0; align-items: center; max-width: 680px; margin: 0 auto; }
+.phase { width: 100%; border-radius: 16px; overflow: hidden; border: 1.5px solid #2d2d4e; }
+.phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; transition: background 0.2s; }
+.phase-header:hover { filter: brightness(1.1); }
+.phase-icon { font-size: 1.5rem; }
+.phase-meta { flex: 1; }
+.phase-title { font-weight: 700; font-size: 1rem; }
+.phase-sub { font-size: 0.78rem; opacity: 0.7; margin-top: 2px; }
+.phase-duration { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.phase-chevron { font-size: 0.8rem; transition: transform 0.2s; opacity: 0.6; }
+.phase.open .phase-chevron { transform: rotate(90deg); }
+.phase-body { display: none; padding: 0 20px 20px; border-top: 1px solid #2d2d4e; }
+.phase.open .phase-body { display: block; }
+.steps { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.step { background: #0f0f1a; border-radius: 10px; padding: 12px 14px; border-left: 3px solid; }
+.step h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+.step p { font-size: 0.8rem; color: #9ca3af; line-height: 1.6; }
+.step .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #1a1a2e; color: #a78bfa; }
+.connector { width: 2px; height: 24px; background: linear-gradient(#7c3aed44, #4f46e544); margin: 0 auto; }
+.p1 .phase-header { background: #1a2035; }
+.p1 .phase-duration { background: #1e3a5f; color: #60a5fa; }
+.p1 .step { border-color: #3b82f6; }
+.p2 .phase-header { background: #1e1535; }
+.p2 .phase-duration { background: #2d1f5e; color: #a78bfa; }
+.p2 .step { border-color: #7c3aed; }
+.p3 .phase-header { background: #0f2a1a; }
+.p3 .phase-duration { background: #1f3d2b; color: #4ade80; }
+.p3 .step { border-color: #22c55e; }
+.p4 .phase-header { background: #2a1f0a; }
+.p4 .phase-duration { background: #3d2a0a; color: #fbbf24; }
+.p4 .step { border-color: #f59e0b; }
+.p5 .phase-header { background: #1f1a35; }
+.p5 .phase-duration { background: #2d1f5e; color: #c084fc; }
+.p5 .step { border-color: #c084fc; }
+.p6 .phase-header { background: #1a2a1a; }
+.p6 .phase-duration { background: #1f3d2b; color: #86efac; }
+.p6 .step { border-color: #86efac; }
+.tip { max-width: 680px; width: 100%; background: #14293d; border: 1px solid #1e4d6b; border-radius: 12px; padding: 14px 18px; margin: 20px auto 0; font-size: 0.83rem; color: #7dd3fc; line-height: 1.7; }
+.tip strong { color: #38bdf8; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🚀 Projet 4 — Onboarding client automatisé</h1>
+<p class="subtitle">Stripe → GPT + Gmail + Airtable + Notion + Slack · Le workflow le plus pro de ton portfolio</p>
+
+<div class="workflow" style="max-width:680px;margin:0 auto 30px;">
+  <h3>🔄 Le workflow final</h3>
+  <div class="flow">
+    <div class="flow-step">💳 Stripe — Client effectue un paiement</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">⚡ N8N Webhook — Reçoit l'événement Stripe</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">⚙️ Code node — Parser les données client</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🤖 GPT — Email de bienvenue personnalisé</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📧 Gmail — Email envoyé au client</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🗂️ Airtable — Fiche client créée dans le CRM</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📓 Notion — Tâches d'onboarding créées</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">💬 Slack — Notification équipe nouveau client</div>
+  </div>
+</div>
+
+<div class="phases">
+
+  <div class="phase p1 open" id="ph1">
+    <div class="phase-header" onclick="toggle('ph1')">
+      <div class="phase-icon">💳</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 1 — Configurer Stripe + Webhook</div>
+        <div class="phase-sub">Mode test · Événement payment_intent.succeeded</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>💳 Créer un compte Stripe</h4>
+          <p>Compte gratuit sur stripe.com. Activer le mode test — toutes les opérations seront simulées avec des cartes fictives, aucun vrai paiement. Carte test : 4242 4242 4242 4242.</p>
+          <div class="tags"><span class="tag">Stripe</span><span class="tag">Mode test</span><span class="tag">Gratuit</span></div>
+        </div>
+        <div class="step">
+          <h4>⚡ Webhook Stripe → N8N</h4>
+          <p>Dans Stripe → Developers → Webhooks → ajouter l'URL N8N. Événement à écouter : "payment_intent.succeeded". Stripe enverra toutes les données du paiement à N8N automatiquement.</p>
+          <div class="tags"><span class="tag">Webhook</span><span class="tag">payment_intent.succeeded</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p2" id="ph2">
+    <div class="phase-header" onclick="toggle('ph2')">
+      <div class="phase-icon">⚙️</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 2 — Parser les données Stripe</div>
+        <div class="phase-sub">Code node · Extraire les infos client</div>
+      </div>
+      <div class="phase-duration">~20 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>⚙️ Code node — Extraire les données</h4>
+          <p>Stripe envoie un objet JSON complexe. Le code node extrait : nom, email, montant, produit acheté, date. Même logique que les projets précédents — tu maîtrises déjà ça !</p>
+          <div class="tags"><span class="tag">Code node</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p3" id="ph3">
+    <div class="phase-header" onclick="toggle('ph3')">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 3 — Email de bienvenue GPT + Gmail</div>
+        <div class="phase-sub">Message ultra-personnalisé selon le produit acheté</div>
+      </div>
+      <div class="phase-duration">~20 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🤖 GPT — Email personnalisé</h4>
+          <p>GPT génère un email de bienvenue adapté au produit acheté et au montant. Un client qui achète une prestation à 5000€ reçoit un email différent d'un client à 500€. C'est ce niveau de personnalisation qui impressionne !</p>
+          <div class="tags"><span class="tag">OpenAI</span><span class="tag">Personnalisation</span></div>
+        </div>
+        <div class="step">
+          <h4>📧 Gmail — Envoi immédiat</h4>
+          <p>L'email part dans les secondes qui suivent le paiement. Le client est impressionné par la réactivité — en réalité c'est 100% automatique.</p>
+          <div class="tags"><span class="tag">Gmail</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p4" id="ph4">
+    <div class="phase-header" onclick="toggle('ph4')">
+      <div class="phase-icon">🗂️</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 4 — Fiche client Airtable</div>
+        <div class="phase-sub">CRM automatique · Nouveau node !</div>
+      </div>
+      <div class="phase-duration">~40 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🗂️ Créer la base Airtable</h4>
+          <p>Une table "Clients" avec : Nom, Email, Téléphone, Produit, Montant, Date, Statut onboarding. Airtable est plus puissant que Google Sheets — vues Kanban, filtres, automatisations natives.</p>
+          <div class="tags"><span class="tag">Airtable</span><span class="tag">CRM</span><span class="tag">Nouveau !</span></div>
+        </div>
+        <div class="step">
+          <h4>⚡ Node Airtable — Créer l'entrée</h4>
+          <p>N8N crée automatiquement une nouvelle ligne dans Airtable à chaque paiement. Tu apprendras le node Airtable qui est très demandé en freelance.</p>
+          <div class="tags"><span class="tag">Airtable node</span><span class="tag">Create record</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p5" id="ph5">
+    <div class="phase-header" onclick="toggle('ph5')">
+      <div class="phase-icon">📓</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 5 — Tâches onboarding Notion</div>
+        <div class="phase-sub">Loop node · Créer N tâches automatiquement</div>
+      </div>
+      <div class="phase-duration">~45 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🔁 Loop node — Créer les tâches en boucle</h4>
+          <p>Pour chaque nouveau client N8N crée automatiquement les tâches : "Appel découverte J+1", "Envoi contrat J+2", "Accès outils J+3", "Réunion kick-off J+7". Tu apprendras le Loop node — très puissant !</p>
+          <div class="tags"><span class="tag">Loop over items</span><span class="tag">Nouveau !</span></div>
+        </div>
+        <div class="step">
+          <h4>📓 Notion — Page tâches par client</h4>
+          <p>Chaque client a sa propre page Notion avec sa checklist d'onboarding. L'équipe sait exactement où en est chaque client sans effort manuel.</p>
+          <div class="tags"><span class="tag">Notion</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p6" id="ph6">
+    <div class="phase-header" onclick="toggle('ph6')">
+      <div class="phase-icon">💬</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 6 — Notification Slack équipe</div>
+        <div class="phase-sub">Alerte instantanée avec lien Airtable + Notion</div>
+      </div>
+      <div class="phase-duration">~15 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>💬 Slack — Nouveau client 🎉</h4>
+          <p>Message Slack avec nom, produit, montant + liens directs vers la fiche Airtable et la page Notion. L'équipe a tout en un clic sans chercher dans les outils.</p>
+          <div class="tags"><span class="tag">Slack</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" style="max-width:680px;">
+  <strong>💡 Pourquoi c'est ton projet portfolio le plus fort</strong>
+  Ce workflow reproduit exactement ce que font les agences qui facturent 1500-3000€ pour une automatisation. Stripe + Airtable + Notion + Slack c'est la stack standard des startups et agences modernes. Avec ce projet tu peux démarcher n'importe quelle agence digitale et montrer un cas concret qui leur parle directement.
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

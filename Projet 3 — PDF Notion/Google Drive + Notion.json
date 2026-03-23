@@ -1,0 +1,288 @@
+{
+  "name": "Google Drive + Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1xmsHAvm9PynY30GkkhQe-zw1ASxh8Krg",
+          "mode": "list",
+          "cachedResultName": "Documents à résumer",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1xmsHAvm9PynY30GkkhQe-zw1ASxh8Krg"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b2a7106e-4c7c-4bd9-9507-5ca425282c76",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6LmTAFUL1Qe1kA1q",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "4b5d75d9-a363-4b61-84e0-a7ee17cfbd7c",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6LmTAFUL1Qe1kA1q",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "9aea23c8-c449-4c96-bc0e-48b39f71f049",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant qui analyse et résume des documents.\n\nVoici le contenu du document :\n{{ $json.text.slice(0, 30000) }}\n\nRetourne UNIQUEMENT ce JSON :\n===JSON===\n{\n  \"titre\": \"titre du document\",\n  \"type\": \"type de document (contrat, CV, rapport, livre...)\",\n  \"resume\": \"résumé en 3 phrases maximum\",\n  \"points_cles\": [\"point 1\", \"point 2\", \"point 3\", \"point 4\", \"point 5\"],\n  \"action\": \"action recommandée en 1 phrase\"\n}\n===END==="
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        0
+      ],
+      "id": "0d27a814-541a-4ddd-b0d6-9c52634a3b48",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output[0].content[0].text;\nconst match = raw.match(/===JSON===([\\s\\S]*?)===END===/);\nconst parsed = JSON.parse(match[1].trim());\n\nreturn [{ json: {\n  titre: parsed.titre,\n  type: parsed.type,\n  resume: parsed.resume,\n  points_cles: parsed.points_cles.join('\\n'),\n  action: parsed.action\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        0
+      ],
+      "id": "ebb4a238-1840-41fc-9114-db4cc7c714d0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "31c439e8-9083-808b-9251-e8c0caa0aec8",
+          "mode": "list",
+          "cachedResultName": "Documents résumés",
+          "cachedResultUrl": "https://www.notion.so/31c439e89083808b9251e8c0caa0aec8"
+        },
+        "title": "={{ $json.titre }}",
+        "blockUi": {
+          "blockValues": [
+            {
+              "textContent": "=📄 Type : {{ $json.type }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "=📝 Résumé : "
+            },
+            {
+              "textContent": "={{ $json.resume }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "🔑 Points clés"
+            },
+            {
+              "textContent": "={{ $json.points_cles }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "✅ Action recommandée"
+            },
+            {
+              "textContent": "={{ $json.action }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "08ac402e-54b8-4ba5-8a65-e5444b361eb0",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "DV65S6TcPVLls6VQ",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "essac92@gmail.com",
+        "subject": "=📄 Nouveau document résumé — {{ $json.property_titre }}",
+        "message": "=<h2>📄 Nouveau document analysé</h2>\n<p><strong>Titre :</strong> {{ $('Code in JavaScript').item.json.titre }}</p>\n<p><strong>Type :</strong>{{ $('Code in JavaScript').item.json.type }} </p>\n<p><strong>Résumé :</strong>{{ $('Code in JavaScript').item.json.resume }} </p>\n<p><strong>Action recommandée :</strong>{{ $('Code in JavaScript').item.json.action }} </p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "3b17472c-435b-4874-96ab-2a68f96088d5",
+      "name": "Send a message",
+      "webhookId": "527ec09b-0fbd-42ed-a118-1de49e41f4c7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ku3Rgy4DGrWvoKdd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ee74ebf9-84d8-4d2c-9426-7a653e56018d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "SjKxUjlW5cip7VxG",
+  "tags": []
+}

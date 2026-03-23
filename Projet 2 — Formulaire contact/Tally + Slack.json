@@ -1,0 +1,614 @@
+{
+  "name": "Tally + Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "formulaire-contact",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        16
+      ],
+      "id": "a33838f0-8936-48fc-bdf0-26f8edc87b84",
+      "name": "Webhook",
+      "webhookId": "5ca09b62-e07a-464e-9734-1e236b13661e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fields = $input.first().json.body.data.fields;\n\nconst getDropdownText = (field) => {\n  if (!field.options) return field.value;\n  const selectedId = Array.isArray(field.value) ? field.value[0] : field.value;\n  const option = field.options.find(o => o.id === selectedId);\n  return option ? option.text : '';\n};\n\nconst getFieldByLabel = (label) => {\n  return fields.find(f => f.label.trim() === label);\n};\n\nreturn [{\n  json: {\n    prenom: getFieldByLabel('Prénom')?.value ?? '',\n    nom: getFieldByLabel('Nom')?.value ?? '',\n    email: getFieldByLabel('Mail')?.value ?? '',\n    telephone: getFieldByLabel('Téléphone')?.value ?? '',\n    type_demande: getDropdownText(getFieldByLabel('Type de demande')),\n    budget: getDropdownText(getFieldByLabel('Budget estimé')),\n    delai: getDropdownText(getFieldByLabel('Délai souhaité')),\n    message: getFieldByLabel('Message')?.value ?? ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        16
+      ],
+      "id": "f8152127-f428-439e-97b0-02adf096943b",
+      "name": "Récupérer les données en Json"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dcb748b7-ee03-4451-8f2a-422bd490ac47",
+              "leftValue": "={{ $json.type_demande }}",
+              "rightValue": "Urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "a45f85fc-ce4c-4076-8d06-9878903c0faa",
+              "leftValue": "={{ $json.delai }}",
+              "rightValue": "Immédiat",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        16
+      ],
+      "id": "92c679c9-3ebf-4013-b292-4fc9fd7dab10",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant qui qualifie des demandes clients.\n\nVoici une demande urgente :\n- Nom : {{ $json.prenom }} {{ $json.nom }}\n- Email : {{ $json.email }}\n- Téléphone : {{ $json.telephone }}\n- Type : {{ $json.type_demande }}\n- Budget : {{ $json.budget }}\n- Délai : {{ $json.delai }}\n- Message : {{ $json.message }}\n\nRetourne UNIQUEMENT ce JSON :\n{\n  \"resume\": \"résumé en 1 phrase\",\n  \"priorite\": \"HAUTE\",\n  \"action\": \"action recommandée en 1 phrase\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -80
+      ],
+      "id": "9a4463b4-ee8d-431d-a4bd-41221f63599f",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "essac92@gmail.com",
+        "subject": "=🚨 Demande URGENTE — {{ $json.resume }}",
+        "message": "=<h2>🚨 Demande urgente reçue</h2>\n\n<p><strong>Contact :</strong> {{ $('Récupérer les données en Json').item.json.prenom }} {{ $('Récupérer les données en Json').item.json.nom }}</p>\n<p><strong>Email :</strong> {{ $('Récupérer les données en Json').item.json.email }}</p>\n<p><strong>Téléphone :</strong> {{ $('Récupérer les données en Json').item.json.telephone }}</p>\n<p><strong>Type :</strong> {{ $('Récupérer les données en Json').item.json.type_demande }}</p>\n<p><strong>Budget :</strong> {{ $('Récupérer les données en Json').item.json.budget }}</p>\n<p><strong>Délai :</strong> {{ $('Récupérer les données en Json').item.json.delai }}</p>\n<p><strong>Message :</strong> {{ $('Récupérer les données en Json').item.json.message }}</p>\n\n<hr>\n<h3>📋 Résumé IA</h3>\n<p>{{ $json.resume }}</p>\n<p><strong>Action recommandée :</strong> {{ $json.action }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -368
+      ],
+      "id": "4e5d4c8b-ae08-49c8-bcb4-a95a7fb3dbc7",
+      "name": "Send a message",
+      "webhookId": "64f8302a-a523-4191-ae43-95d1ad51c4db",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ku3Rgy4DGrWvoKdd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "https://app.slack.com/client/T0AH9G1APNF/C0AHCGDNJQ5",
+          "mode": "url"
+        },
+        "text": "=🚨 Demande URGENTE Contact :{{ $('Récupérer les données en Json').item.json.prenom }}{{ $('Récupérer les données en Json').item.json.nom }} Email : {{ $('Récupérer les données en Json').item.json.email }} Budget : {{ $('Récupérer les données en Json').item.json.budget }} \n\nRésumé : {{ $json.resume }} \n\n\nAction : {{ $json.action }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1120,
+        -208
+      ],
+      "id": "a5b8c5a8-803e-43da-a301-8b1081c2d552",
+      "name": "Send a message1",
+      "webhookId": "e901d17c-87fa-438d-ae93-8aa41a121e17",
+      "credentials": {
+        "slackApi": {
+          "id": "tu7FlVuZXUNEhkNv",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant qui qualifie des demandes clients.\n\nVoici une demande :\n- Nom : {{ $json.prenom }}{{ $json.nom }}\n- Téléphone : {{ $json.telephone }}\n- Type : {{ $json.type_demande }}\n- Budget : {{ $json.budget }}\n- Délai : {{ $json.delai }}\n- Message : {{ $json.message }}\n\nRetourne UNIQUEMENT ce JSON :\n{\n  \"resume\": \"résumé en 1 phrase\",\n  \"priorite\": \"NORMALE\",\n  \"action\": \"action recommandée en 1 phrase\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        144
+      ],
+      "id": "31d355fd-4067-402c-a8d0-85404d2bd82f",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "essac92@gmail.com",
+        "subject": "=📋 Nouvelle demande — {{ $json.resume }}",
+        "message": "=<h2>📋 Nouvelle demande</h2>\n\n<p><strong>Contact :</strong> {{ $('Récupérer les données en Json').item.json.prenom }} {{ $('Récupérer les données en Json').item.json.nom }}</p>\n<p><strong>Email :</strong> {{ $('Récupérer les données en Json').item.json.email }}</p>\n<p><strong>Téléphone :</strong> {{ $('Récupérer les données en Json').item.json.telephone }}</p>\n<p><strong>Type :</strong> {{ $('Récupérer les données en Json').item.json.type_demande }}</p>\n<p><strong>Budget :</strong> {{ $('Récupérer les données en Json').item.json.budget }}</p>\n<p><strong>Délai :</strong> {{ $('Récupérer les données en Json').item.json.delai }}</p>\n<p><strong>Message :</strong> {{ $('Récupérer les données en Json').item.json.message }}</p>\n\n<hr>\n<h3>📋 Résumé IA</h3>\n<p>{{ $json.resume }}</p>\n<p><strong>Action recommandée :</strong> {{ $json.action }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        336
+      ],
+      "id": "b5ea1534-58f4-4cb2-b1b5-a8ddfb1c9e9d",
+      "name": "Send a message2",
+      "webhookId": "64f8302a-a523-4191-ae43-95d1ad51c4db",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ku3Rgy4DGrWvoKdd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "https://app.slack.com/client/T0AH9G1APNF/C0AH9N3RH8T",
+          "mode": "url"
+        },
+        "text": "=📋 Nouvelle demande Contact :{{ $('Récupérer les données en Json').item.json.prenom }}{{ $('Récupérer les données en Json').item.json.nom }} Email : {{ $('Récupérer les données en Json').item.json.email }} Budget : {{ $('Récupérer les données en Json').item.json.budget }} \n\nRésumé : {{ $json.resume }} \n\n\nAction : {{ $json.action }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1136,
+        496
+      ],
+      "id": "22bf35d2-2e85-43e0-b159-98f9b3fd8a5a",
+      "name": "Send a message3",
+      "webhookId": "e901d17c-87fa-438d-ae93-8aa41a121e17",
+      "credentials": {
+        "slackApi": {
+          "id": "tu7FlVuZXUNEhkNv",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output[0].content[0].text;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\nreturn [{ json: {\n  resume: parsed.resume,\n  priorite: parsed.priorite,\n  action: parsed.action\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -80
+      ],
+      "id": "03096c6d-5520-41cb-ad98-261f317030f1",
+      "name": "Parsing branche urgente"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output[0].content[0].text;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\nreturn [{ json: {\n  resume: parsed.resume,\n  priorite: parsed.priorite,\n  action: parsed.action\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        320
+      ],
+      "id": "73660458-5bdd-4e3f-a38b-ebc3d270906e",
+      "name": "Parsing note normale"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "e7f3353f-093f-4b2d-b168-eef846a3712f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit?gid=207603914#gid=207603914",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 207603914,
+          "mode": "list",
+          "cachedResultName": "Demande de contact",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit#gid=207603914"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "resume": "={{ $json.resume }}",
+            "priorite": "={{ $json.priorite }}",
+            "action": "={{ $json.action }}",
+            "date": "={{ $now }}",
+            "nom": "={{ $('Récupérer les données en Json').item.json.nom }}",
+            "email": "={{ $('Récupérer les données en Json').item.json.email }}",
+            "budget": "={{ $('Récupérer les données en Json').item.json.budget }}",
+            "telephone": "={{ $('Récupérer les données en Json').item.json.telephone }}",
+            "mail": "={{ $('Récupérer les données en Json').item.json.email }}",
+            "type_demande ": "={{ $('Récupérer les données en Json').item.json.type_demande }}",
+            "Prénom": "={{ $('Récupérer les données en Json').item.json.prenom }}",
+            "message": "={{ $('Récupérer les données en Json').item.json.message }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "Prénom",
+              "displayName": "Prénom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nom",
+              "displayName": "nom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "type_demande ",
+              "displayName": "type_demande ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telephone",
+              "displayName": "telephone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mail",
+              "displayName": "mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resume",
+              "displayName": "resume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priorite",
+              "displayName": "priorite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        96
+      ],
+      "id": "301a2fab-5bc9-4e74-a387-ed32f0ab5b1f",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rE9qqRZg81jgmaNF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "✅ Nous avons bien reçu votre demande",
+        "message": "=<h2>Bonjour {{ $json[\"Prénom\"] }},</h2>\n\n<p>Nous avons bien reçu votre demande et nous vous recontacterons dans les plus brefs délais.</p>\n\n<p><strong>Récapitulatif de votre demande :</strong></p>\n<p>Type :{{ $('Récupérer les données en Json').item.json.type_demande }} </p>\n<p>Budget :{{ $json.budget }} </p>\n<p>Délai : {{ $('Récupérer les données en Json').item.json.delai }}</p>\n<p>Message :{{ $json.message }} </p>\n\n<p>À très bientôt,<br>L'équipe</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1536,
+        96
+      ],
+      "id": "37ee040f-3aa7-4cbb-851f-a134798d3111",
+      "name": "Send a message4",
+      "webhookId": "864dc047-cc33-4a8d-b0f5-c773c7672175",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ku3Rgy4DGrWvoKdd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Récupérer les données en Json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Récupérer les données en Json": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parsing branche urgente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Parsing note normale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message3": {
+      "main": [
+        []
+      ]
+    },
+    "Parsing branche urgente": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsing note normale": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "777ecd97-1740-4722-9798-ae852a02cc1c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "G68h1A2gXocb5hUU",
+  "tags": []
+}

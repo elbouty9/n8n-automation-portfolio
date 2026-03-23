@@ -1,0 +1,311 @@
+{
+  "name": "Sous-Agent Recherche leads",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "secteur"
+            },
+            {
+              "name": "ville"
+            },
+            {
+              "name": "limit",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "29303e1b-d473-4fa6-aeb5-675e4cd05577",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "nwua9Gu5YrADL7ZDj",
+          "mode": "list",
+          "cachedResultName": "Google Maps Scraper (compass/crawler-google-places)",
+          "cachedResultUrl": "https://console.apify.com/actors/nwua9Gu5YrADL7ZDj/input"
+        },
+        "customBody": "={\n  \"includeWebResults\": false,\n  \"language\": \"fr\",\n  \"locationQuery\": \"{{ $json.ville }}\",\n  \"maxCrawledPlacesPerSearch\": {{ $json.limit }},\n  \"maxImages\": 0,\n  \"scrapeContacts\": true,\n  \"scrapePlaceDetailPage\": true,\n  \"searchStringsArray\": [\"{{ $json.secteur }}\"],\n  \"skipClosedPlaces\": true,\n  \"website\": \"withWebsite\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "552b19ee-ef8a-43c4-b021-e2b809988470",
+      "name": "Apify Google Maps",
+      "credentials": {
+        "apifyApi": {
+          "id": "eSuPYGJB0W43qLa5",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en qualification de leads B2B.\n\nAnalyse cette entreprise et donne un score de 0 à 100 selon ces critères :\n- A un site web → +30 points\n- A un numéro de téléphone → +20 points\n- Semble être une vraie entreprise (pas un particulier) → +25 points\n- Bonne note Google (si disponible) → +15 points\n- Adresse professionnelle → +10 points\n\nDonnées de l'entreprise :\n- Nom : {{ $json.title }}\n- Adresse : {{ $json.address }}\n- Site web : {{ $json.website }}\n- Téléphone : {{ $json.phone }}\n- Note Google : {{ $json.totalScore }}\n\nRetourne UNIQUEMENT ce JSON :\n===JSON===\n{\"score\": 85, \"raison\": \"...\", \"company\": \"...\", \"website\": \"...\", \"address\": \"...\"}\n===END==="
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "f238c330-53f0-4fa4-be55-0fc57fa92d3e",
+      "name": "Qualification Leads",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n  const text = raw.replace(/\\\\n/g, '\\n');\n  const match = text.match(/===JSON===([\\s\\S]*?)===END===/);\n  if (!match) return { json: { score: 0, raison: 'JSON not found', raw: text } };\n  try {\n    const parsed = JSON.parse(match[1].trim());\n    return { json: { score: parsed.score, raison: parsed.raison, company: parsed.company, website: parsed.website, address: parsed.address }};\n  } catch (e) {\n    return { json: { score: 0, raison: 'JSON parse error', raw: text } };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        0
+      ],
+      "id": "0b6c1a8b-587f-4152-be6f-fb0d7f388a8c",
+      "name": "Parsing data"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"company\": \"{{ $json.company }}\",\n  \"website\": \"{{ $json.website }}\",\n  \"address\": \"{{ $json.address }}\",\n  \"score\": \"{{ $json.score }}\",\n  \"raison\": \" {{ $('Parsing data').item.json.raison }}\",\n  \"statut\": \"qualifié\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        -144
+      ],
+      "id": "fe4fd704-66f5-4300-9ca2-958574578b7f",
+      "name": "Qualifié"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"company\": \"{{ $json.company }}\",\n  \"score\": \"{{ $json.score }}\",\n  \"statut\": \"ignoré\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        48
+      ],
+      "id": "0d682ab0-4a5c-4a7f-b2c6-6150a647f016",
+      "name": "Ignoré"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d4d56fc6-3970-4cb4-b5f3-fa1d9dba4583",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        0
+      ],
+      "id": "09bb7489-7b78-4190-9c1c-7d9e07c6611d",
+      "name": "Qualifié ou non ?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1488,
+        -48
+      ],
+      "id": "175e2f4a-387c-4714-89b5-f11aef8e0620",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"secteur\": \"{{ $json.secteur }}\",\n  \"ville\"  : \"{{ $json.ville }}\",\n  \"limit\": {{ $json.limit }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        0
+      ],
+      "id": "635149c4-4d68-4529-8cd3-a6813d8f1041",
+      "name": "Debug Integer Limit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Debug Integer Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Google Maps": {
+      "main": [
+        [
+          {
+            "node": "Qualification Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualification Leads": {
+      "main": [
+        [
+          {
+            "node": "Parsing data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsing data": {
+      "main": [
+        [
+          {
+            "node": "Qualifié ou non ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifié ou non ?": {
+      "main": [
+        [
+          {
+            "node": "Qualifié",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignoré",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifié": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ignoré": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Debug Integer Limit": {
+      "main": [
+        [
+          {
+            "node": "Apify Google Maps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SGqnpz8K4HptDcor",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f9e223e4-4011-4fcc-91be-93018650135d",
+  "meta": {
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "eIX34Ic27HFYMfts",
+  "tags": []
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 3 — Résumé automatique de documents</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+
+h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #6b7280; font-size: 0.82rem; margin-bottom: 32px; }
+
+.workflow {
+  max-width: 680px; margin: 0 auto 30px;
+  background: #1a1a2e; border: 1.5px solid #2d2d4e;
+  border-radius: 14px; padding: 20px;
+}
+.workflow h3 { color: #a78bfa; font-size: 0.9rem; margin-bottom: 14px; }
+.flow { display: flex; flex-direction: column; gap: 0; align-items: center; }
+.flow-step {
+  width: 100%; background: #0f0f1a; border-radius: 10px;
+  padding: 10px 14px; font-size: 0.85rem;
+  border-left: 3px solid #7c3aed;
+}
+.flow-arrow { color: #4f46e5; font-size: 0.8rem; margin: 4px 0; }
+
+.phases { display: flex; flex-direction: column; gap: 0; align-items: center; max-width: 680px; margin: 0 auto; }
+
+.phase { width: 100%; border-radius: 16px; overflow: hidden; border: 1.5px solid #2d2d4e; }
+.phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; transition: background 0.2s; }
+.phase-header:hover { filter: brightness(1.1); }
+.phase-icon { font-size: 1.5rem; }
+.phase-meta { flex: 1; }
+.phase-title { font-weight: 700; font-size: 1rem; }
+.phase-sub { font-size: 0.78rem; opacity: 0.7; margin-top: 2px; }
+.phase-duration { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.phase-chevron { font-size: 0.8rem; transition: transform 0.2s; opacity: 0.6; }
+.phase.open .phase-chevron { transform: rotate(90deg); }
+
+.phase-body { display: none; padding: 0 20px 20px; border-top: 1px solid #2d2d4e; }
+.phase.open .phase-body { display: block; }
+
+.steps { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.step { background: #0f0f1a; border-radius: 10px; padding: 12px 14px; border-left: 3px solid; }
+.step h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+.step p { font-size: 0.8rem; color: #9ca3af; line-height: 1.6; }
+.step .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #1a1a2e; color: #a78bfa; }
+
+.connector { width: 2px; height: 24px; background: linear-gradient(#7c3aed44, #4f46e544); margin: 0 auto; }
+
+.p1 .phase-header { background: #1a2035; }
+.p1 .phase-duration { background: #1e3a5f; color: #60a5fa; }
+.p1 .step { border-color: #3b82f6; }
+
+.p2 .phase-header { background: #1e1535; }
+.p2 .phase-duration { background: #2d1f5e; color: #a78bfa; }
+.p2 .step { border-color: #7c3aed; }
+
+.p3 .phase-header { background: #0f2a1a; }
+.p3 .phase-duration { background: #1f3d2b; color: #4ade80; }
+.p3 .step { border-color: #22c55e; }
+
+.p4 .phase-header { background: #2a1f0a; }
+.p4 .phase-duration { background: #3d2a0a; color: #fbbf24; }
+.p4 .step { border-color: #f59e0b; }
+
+.p5 .phase-header { background: #1f1a35; }
+.p5 .phase-duration { background: #2d1f5e; color: #c084fc; }
+.p5 .step { border-color: #c084fc; }
+
+.tip { max-width: 680px; width: 100%; background: #14293d; border: 1px solid #1e4d6b; border-radius: 12px; padding: 14px 18px; margin: 20px auto 0; font-size: 0.83rem; color: #7dd3fc; line-height: 1.7; }
+.tip strong { color: #38bdf8; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>📄 Projet 3 — Résumé automatique de documents</h1>
+<p class="subtitle">Google Drive → PDF → GPT → Notion · Très vendable aux cabinets et PME</p>
+
+<div class="workflow" style="max-width:680px;margin:0 auto 30px;">
+  <h3>🔄 Le workflow final</h3>
+  <div class="flow">
+    <div class="flow-step">📁 Google Drive — Nouveau PDF déposé dans un dossier</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">⬇️ N8N télécharge le fichier PDF</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📝 Extraction du texte du PDF</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🤖 GPT — Résumé + points clés + action recommandée</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📓 Notion — Nouvelle page créée avec le résumé</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📧 Gmail — Notification avec le résumé envoyée</div>
+  </div>
+</div>
+
+<div class="phases">
+
+  <div class="phase p1 open" id="ph1">
+    <div class="phase-header" onclick="toggle('ph1')">
+      <div class="phase-icon">📁</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 1 — Configurer Google Drive</div>
+        <div class="phase-sub">Créer le dossier de surveillance · Trigger N8N</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📁 Créer le dossier "Documents à résumer"</h4>
+          <p>Dans Google Drive crée un dossier dédié. C'est ce dossier que N8N va surveiller en permanence — dès qu'un PDF y est déposé le workflow se déclenche.</p>
+          <div class="tags"><span class="tag">Google Drive</span><span class="tag">Dossier</span></div>
+        </div>
+        <div class="step">
+          <h4>⚡ Google Drive Trigger dans N8N</h4>
+          <p>Node "Google Drive Trigger" → surveille le dossier → se déclenche sur "File Created". Tu apprendras un nouveau type de trigger basé sur des événements externes.</p>
+          <div class="tags"><span class="tag">Google Drive Trigger</span><span class="tag">Event</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p2" id="ph2">
+    <div class="phase-header" onclick="toggle('ph2')">
+      <div class="phase-icon">📝</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 2 — Télécharger et extraire le texte</div>
+        <div class="phase-sub">Download + extraction PDF</div>
+      </div>
+      <div class="phase-duration">~45 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>⬇️ Télécharger le PDF depuis Drive</h4>
+          <p>Node Google Drive → Download File. Tu récupères le fichier binaire du PDF dans N8N pour pouvoir l'analyser.</p>
+          <div class="tags"><span class="tag">Google Drive</span><span class="tag">Binary data</span></div>
+        </div>
+        <div class="step">
+          <h4>📝 Extraire le texte du PDF</h4>
+          <p>Node "Extract from File" → PDF → texte brut. C'est un node natif N8N qui lit le contenu du PDF sans API externe. Tu apprendras à manipuler des fichiers binaires.</p>
+          <div class="tags"><span class="tag">Extract from File</span><span class="tag">PDF</span><span class="tag">Binary</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p3" id="ph3">
+    <div class="phase-header" onclick="toggle('ph3')">
+      <div class="phase-icon">🤖</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 3 — Résumé IA avec GPT</div>
+        <div class="phase-sub">Résumé + points clés + action recommandée</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🤖 GPT — Analyser le document</h4>
+          <p>GPT reçoit le texte extrait et retourne un résumé structuré en JSON : titre, résumé en 3 phrases, 5 points clés, type de document, action recommandée.</p>
+          <div class="tags"><span class="tag">OpenAI</span><span class="tag">JSON structuré</span></div>
+        </div>
+        <div class="step">
+          <h4>⚙️ Parser le JSON</h4>
+          <p>Code node pour extraire proprement les champs du JSON GPT — comme on a fait sur les projets précédents. Tu maîtrises déjà ça !</p>
+          <div class="tags"><span class="tag">Code node</span><span class="tag">JSON parsing</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p4" id="ph4">
+    <div class="phase-header" onclick="toggle('ph4')">
+      <div class="phase-icon">📓</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 4 — Stocker dans Notion</div>
+        <div class="phase-sub">Nouvelle page créée automatiquement</div>
+      </div>
+      <div class="phase-duration">~45 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📓 Créer une page Notion</h4>
+          <p>Node Notion → Create Page dans une database. La page contiendra : titre du document, résumé, points clés, date, lien Google Drive. Tu apprendras le node Notion qui est très demandé.</p>
+          <div class="tags"><span class="tag">Notion</span><span class="tag">Database</span><span class="tag">Page</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p5" id="ph5">
+    <div class="phase-header" onclick="toggle('ph5')">
+      <div class="phase-icon">📧</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 5 — Notification Gmail</div>
+        <div class="phase-sub">Email avec le résumé envoyé automatiquement</div>
+      </div>
+      <div class="phase-duration">~15 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📧 Email de notification</h4>
+          <p>Gmail envoie un email avec le résumé complet + lien vers la page Notion créée. Tu connais déjà ce node — ce sera rapide !</p>
+          <div class="tags"><span class="tag">Gmail</span><span class="tag">Notification</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" style="max-width:680px;">
+  <strong>💡 Pourquoi ce projet est parfait pour ton portfolio</strong>
+  Les cabinets d'avocats, RH, comptables et consultants reçoivent des dizaines de documents par semaine. Ce workflow leur économise des heures de lecture. Tu peux le vendre entre 500€ et 1500€ en freelance et le déployer en moins d'une journée !
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

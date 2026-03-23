@@ -1,0 +1,105 @@
+{
+  "name": "Sous-agent Rédaction Email",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e510bc7a-673f-45e1-ac35-c0e8a2dac201",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en copywriting B2B.\n\nVoici les informations du lead :\n{{ $json.query }}\n\nRédige un email de prospection personnalisé et professionnel.\n\nRègles :\n- Maximum 5 phrases\n- Ton chaleureux et humain\n- Termine avec un appel à l'action clair\n- Signe avec \"Jérémy\"\n\nRéponds UNIQUEMENT avec ce JSON exact, rien d'autre avant ou après :\n{\"sujet\": \"ton sujet ici\", \"corps\": \"ton email ici\"}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f566f5a6-6319-43d2-a902-7ee20c9d940c",
+      "name": "Rediger le mail",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  try {\n    const parsed = JSON.parse(cleaned);\n    return { json: { sujet: parsed.sujet, corps: parsed.corps }};\n  } catch(e) {\n    return { json: { sujet: 'Erreur', corps: raw }};\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "77a73dde-aa04-4106-8ce3-f49799226541",
+      "name": "Parser les données"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Rediger le mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rediger le mail": {
+      "main": [
+        [
+          {
+            "node": "Parser les données",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SGqnpz8K4HptDcor",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "040cc7e7-cfe3-48da-b696-8ec4c42867a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "1WCbg3AwBrWdxeVe",
+  "tags": []
+}

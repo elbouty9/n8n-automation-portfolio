@@ -1,0 +1,1578 @@
+{
+  "name": "Scrapping + premier message",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        112
+      ],
+      "id": "19f6c9d8-1861-4db0-a610-31a89ce8fc69",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant qui analyse des sites web.\n\nÀ partir des informations suivantes :\nNom de l'entreprise : {{ $('Scraping lieu google Maps').item.json.title }},\nSite web : {{ $('Scraping lieu google Maps').item.json.website }},\nCatégorie : {{ $('Scraping lieu google Maps').item.json.categoryName }},\nAdresse : {{ $('Scraping lieu google Maps').item.json.address }},\n\nExplique clairement en 2 à 3 phrases :\n1) Ce que fait l'entreprise\n2) À qui elle s'adresse"
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        48
+      ],
+      "id": "bf1e4faa-f9ca-4fab-b21c-1de09376ef5e",
+      "name": "Résumé de l'entreprise",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un système de scoring de leads B2B.\n\nAnalyse les informations suivantes :\n- Nom : {{ $('Scraping lieu google Maps').item.json.title }}\n- Catégorie : {{ $('Scraping lieu google Maps').item.json.categoryName }}\n- Note Google : {{ $('Scraping lieu google Maps').item.json.totalScore }}\n- Adresse : {{ $('Scraping lieu google Maps').item.json.address }}\n- Téléphone : {{ $('Scraping lieu google Maps').item.json.phone }}\n- Résumé activité : {{ $json.description }}\n\nAttribue un score de 0 à 100 selon ces critères :\n- Note Google >= 4.0 → +20 points\n- Note Google >= 4.5 → +30 points (remplace le critère précédent)\n- Catégorie pertinente pour du B2B → +25 points\n- Téléphone présent → +20 points\n- Localisé à Paris ou Île-de-France → +15 points\n- Résumé suggère une activité professionnelle sérieuse → +10 points\n\nJustifie brièvement ton score en 1 phrase.\n\nRetourne STRICTEMENT :\n===JSON===\n{\n  \"score\": [nombre entre 0 et 100],\n  \"raison\": \"explication courte\",\n  \"source\": \"{{ $json.source }}\",\n  \"company\": \"{{ $json.company }}\",\n  \"website\": \"{{ $json.website }}\",\n  \"address\" : \"{{ $('Scraping lieu google Maps').item.json.address }}\",\n  \"sector\"{{ $('Scraping lieu google Maps').item.json.categoryName }}\n}\n===END==="
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        864,
+        80
+      ],
+      "id": "b2e084db-6877-47f1-b0a6-fea45a9de4b4",
+      "name": "Scoring de l'entreprise",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"qualifié\",\n  \"retry\": 0\n  \n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        -16
+      ],
+      "id": "024940aa-b413-4b03-8b51-dfa459b4da8c",
+      "name": "Qualifié"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Ignoré\"\n  \n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        304
+      ],
+      "id": "16897ef2-f940-4ab1-a2e9-b2949a727e88",
+      "name": "Ignoré"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en prospection B2B.\n\nVoici les informations sur le prospect :\n- Entreprise : {{ $('Scraping lieu google Maps').item.json.title }}\n- Catégorie : {{ $('Scraping lieu google Maps').item.json.categoryName }}\n- Site web : {{ $('Scraping lieu google Maps').item.json.website }}\n- Activité : {{ $('Résumé de l\\'entreprise').item.json.output[0].content[0].text }}\n\nRédige un message de premier contact LinkedIn ou email qui respecte ces règles :\n- Commence par une observation spécifique sur leur activité (pas générique)\n- Maximum 3 phrases\n- Zéro jargon commercial (\"synergie\", \"solution\", \"valeur ajoutée\")\n- Pose une question ouverte à la fin\n- Ton naturel, comme si tu écrivais à un humain\n\nRetourne UNIQUEMENT le message, sans guillemets, sans signature."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2080,
+        -224
+      ],
+      "id": "2281f246-7467-4926-848f-2e55673d7a6a",
+      "name": "Premier message pour contacter le lead qualifié",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n\n  if (!raw) {\n    return { json: { approved: false, feedback: 'No raw text' } };\n  }\n\n  try {\n    const cleaned = raw.replace(/```json|```/g, '').trim();\n    const parsed = JSON.parse(cleaned);\n    return { json: { approved: parsed.approved, feedback: parsed.feedback } };\n  } catch (e) {\n    return { json: { approved: false, feedback: 'JSON parse error', raw } };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -80
+      ],
+      "id": "0cd19cc3-d4bc-4525-a14a-8b16bbd77860",
+      "name": "Pour extraire le json "
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un agent de contrôle qualité.\n\nVoici un message de premier contact B2B :\n\"{{ $json.output[0].content[0].text }}\"\n\nAnalyse-le et retourne STRICTEMENT un JSON au format suivant :\n\n{\n  \"approved\": true,\n  \"feedback\": \"raison courte\"\n}\n\nRègles :\napproved = true si le message est clair, humain et professionnel,\napproved = false s’il est maladroit, trop commercial ou peu clair,\naucun texte hors JSON"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2512,
+        -80
+      ],
+      "id": "024e26ae-8453-42c9-ae6d-746351c8a5ee",
+      "name": "Pour approuver le premier message",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n  const text = raw.replace(/\\\\n/g, '\\n');\n  \n  const match = text.match(/===JSON===([\\s\\S]*?)===END===/);\n\n  if (!match) {\n    return { json: { score: 0, raison: 'JSON not found', raw: text } };\n  }\n\n  try {\n    const parsed = JSON.parse(match[1].trim());\n    return { json: { \n      score: parsed.score, \n      raison: parsed.raison,\n      source: parsed.source,\n      company: parsed.company,\n      website: parsed.website,\n      address: parsed.address,\n      sector: parsed.sector\n    }};\n  } catch (e) {\n    return { json: { score: 0, raison: 'JSON parse error', raw: text } };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        128
+      ],
+      "id": "7ccd62c2-b751-442f-ae34-83be4661208f",
+      "name": "Json scoring"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3840,
+        -64
+      ],
+      "id": "cc850258-706f-4512-bc4d-1eb97e64e238",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"review_status\": \"Ready_To_Send\",\n  \"current message\": \"{{ $('Merge5').item.json.output[0].content[0].text }}\"\n}\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3520,
+        -96
+      ],
+      "id": "4b2baace-fedc-4a18-a133-e5a2fda67e69",
+      "name": "Pret à etre envoyé"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"review_status\": \"{{ $json.approved }}\",\n  \"review_feedback\": \"{{ $json.feedback }}\",\n  \"retry\":  \"{{ $('Qualifié').item.json.retry + 1}}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2784,
+        112
+      ],
+      "id": "53ec6bd7-d5c4-4e6a-8bc1-9b6ae9f269ca",
+      "name": "revoir le message",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a24efe79-a02b-41b4-9f86-1e201c58cc6b",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2976,
+        -80
+      ],
+      "id": "834114e5-47bf-47a2-9310-4f3791c2455b",
+      "name": "Pour voir si le message est cool"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7dde23e7-4ed2-4536-b14b-a76f9514a495",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "=Google maps",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "134b69d6-1656-4090-a9d9-e544020c0f58",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 80,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        16
+      ],
+      "id": "de86fe9f-6661-4794-a5c3-764d1bb31bd4",
+      "name": "Qualifié ou non le lead"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant expert en rédaction B2B.\n\nVoici un message rejeté par le contrôle qualité :\n\"{{ $('Premier message pour contacter le lead qualifié').item.json.output[0].content[0].text }}\"\n\nFeedback du reviewer :\n\"{{$json.review_feedback}}\"\n\nRéécris le message en corrigeant précisément les points mentionnés.\nContraintes :\nhumain et naturel,\npas trop commercial,\n2 à 3 phrases maximum,\nton professionnel,\n\nRetourne UNIQUEMENT le nouveau message, sans guillemets."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        3200,
+        0
+      ],
+      "id": "1117a554-eddb-41a6-98c4-9b8ba1e298c9",
+      "name": "Reecriture du message",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"current_message\": \"{{ $json.output[0].content[0].text }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3584,
+        96
+      ],
+      "id": "7df9e2ee-1c82-4d36-a700-8bf5ed3c76e3",
+      "name": "Nouveau message modifié",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1751ab8-e127-4f91-b8e4-7481f4d10e35",
+              "leftValue": "={{ $json.retry.toNumber() }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3056,
+        128
+      ],
+      "id": "7770c6cd-66f6-4220-9379-5d0876b50a58",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"review_status\":\"Still_Needs_Review\",\n  \"review_feedback\":\"{{ $json.review_feedback }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3264,
+        128
+      ],
+      "id": "c0a83b29-b1e0-4e68-9b31-deb5a0feb443",
+      "name": "Message pas bon et fin de boucle"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "nwua9Gu5YrADL7ZDj",
+          "mode": "list",
+          "cachedResultName": "Google Maps Scraper (compass/crawler-google-places)",
+          "cachedResultUrl": "https://console.apify.com/actors/nwua9Gu5YrADL7ZDj/input"
+        },
+        "customBody": "{\n    \"includeWebResults\": false,\n    \"language\": \"fr\",\n    \"locationQuery\": \"Paris\",\n    \"maxCrawledPlacesPerSearch\": 10,\n    \"maxImages\": 0,\n    \"maximumLeadsEnrichmentRecords\": 0,\n    \"scrapeContacts\": true,\n    \"scrapeDirectories\": false,\n    \"scrapeImageAuthors\": false,\n    \"scrapePlaceDetailPage\": true,\n    \"scrapeReviewsPersonalData\": false,\n    \"scrapeSocialMediaProfiles\": {\n        \"facebooks\": false,\n        \"instagrams\": false,\n        \"tiktoks\": false,\n        \"twitters\": false,\n        \"youtubes\": false\n    },\n    \"scrapeTableReservationProvider\": false,\n    \"searchStringsArray\": [\n        \"Concessionaire\"\n    ],\n    \"skipClosedPlaces\": true,\n    \"website\": \"withWebsite\"\n    \n}\n"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        48
+      ],
+      "id": "11868959-46f8-49f8-b1b5-d1b6411cdfe5",
+      "name": "Scraping lieu google Maps",
+      "credentials": {
+        "apifyApi": {
+          "id": "eSuPYGJB0W43qLa5",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "od6RadQV98FOARtrp",
+          "mode": "list",
+          "cachedResultName": "🔥 Linkedin Companies & Profiles Bulk Scraper (bebity/linkedin-premium-actor)",
+          "cachedResultUrl": "https://console.apify.com/actors/od6RadQV98FOARtrp/input"
+        },
+        "customBody": "{\n    \"action\": \"get-companies\",\n    \"isName\": false,\n    \"isUrl\": false,\n    \"keywords\": [\n       \"agence marketing\",\n        \"agence digitale\",\n        \"agence SEO\"\n    ],\n    \"limit\": 5,\n    \"location\": [\n        \"Bordeaux\"\n    ]\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        224
+      ],
+      "id": "5ac0c418-2b83-4f64-a8f4-1a428d8dcaaf",
+      "name": "Scraping entreprise Linkedin",
+      "credentials": {
+        "apifyApi": {
+          "id": "eSuPYGJB0W43qLa5",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        576,
+        176
+      ],
+      "id": "4be6aa0a-365c-4970-af1a-68e007d7ecad",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"company\": \"{{ $('Scraping lieu google Maps').item.json.title }}\",\n  \"website\": \"{{ $json.website ?? '' }}\",\n  \"source\": \"Google Maps\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        48
+      ],
+      "id": "823d6fbe-57fa-4016-8ef9-b1fe8c83b075",
+      "name": "Company Source Website"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"company\": \"{{ $json.name }}\",\n  \"website\": \"{{ $json.websiteUrl ?? '' }}\",\n  \"description\": \"{{ $json.description ?? '' }}\",\n  \"source\": \"LinkedIn\"\n}\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        224
+      ],
+      "id": "66719d9f-fa92-497e-aaba-7d5dd5ba8061",
+      "name": "Même chose mais avec résumé"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"company\": \"{{ $('Scraping lieu google Maps').item.json.title }}\",\n  \"website\": \"{{ $('Scraping lieu google Maps').item.json.website }}\",\n  \"source\": \"Google maps\",\n  \"description\": \"{{ $json.output[0].content[0].text }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        48
+      ],
+      "id": "0f3d7ac9-bb56-451a-89fc-d8d8eb59b21e",
+      "name": "Recuperer tous les infos"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un système de scoring de leads B2B.\n\nAnalyse les informations suivantes :\n- Nom : {{ $json.company }}\n- Secteur : {{ $('Scraping entreprise Linkedin').item.json.industry[0] ?? 'Non renseigné' }}\n- Taille entreprise : {{ $('Scraping entreprise Linkedin').item.json.employeeCount ?? 'Non renseignée' }}\n- Abonnés LinkedIn : {{ $('Scraping entreprise Linkedin').item.json.followerCount ?? 0 }}\n- Description : {{ $json.description }}\n\nAttribue un score de 0 à 100 selon ces critères :\n- Secteur pertinent pour du B2B → +30 points\n- Plus de 10 employés → +20 points\n- Plus de 50 employés → +30 points (remplace)\n- Plus de 200 abonnés LinkedIn → +20 points\n- Description suggère une activité sérieuse → +20 points\n\nJustifie brièvement ton score en 1 phrase.\n\nRetourne STRICTEMENT :\n===JSON===\n{\n  \"score\": [nombre entre 0 et 100],\n  \"raison\": \"explication courte\",\n  \"source\": \"{{ $json.source }}\",\n  \"company\": \"{{ $json.company }}\",\n  \"website\": \"{{ $json.website }}\"\n  \"address\": \"{{ $('Scraping entreprise Linkedin').item.json.headquarter.city ?? '' }}\"\n\"sector\": \"{{ $('Scraping entreprise Linkedin').item.json.industry[0] ?? '' }}\"\n}\n===END==="
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        864,
+        272
+      ],
+      "id": "d1373bda-14ed-47ce-bace-29114adee6b4",
+      "name": "Scoring linkedin entreprise",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4f693cf8-62a1-49bb-a3f6-cb2ec07c8d1e",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "=Google maps",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        176
+      ],
+      "id": "5fe73145-e522-419c-9141-56a22fb8a957",
+      "name": "Google maps ou Linkedin?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "311bc467-f9f1-4462-b5e0-b7a619c6fe8a",
+              "leftValue": "={{ $('Google maps ou Linkedin?').item.json.source }}",
+              "rightValue": "Google maps",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        -32
+      ],
+      "id": "39414037-9595-4475-a1c4-9c5a9b1d9f41",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "2dc23eea-89bd-40df-b9bd-e2bfefca3772",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1136,
+        128
+      ],
+      "id": "644e4668-8912-4aff-989f-49cf590840e5",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en prospection B2B.\n\nVoici les informations sur le prospect :\n- Entreprise : {{ $('Scraping entreprise Linkedin').item.json.name }}\n- Secteur : {{ $('Scraping entreprise Linkedin').item.json.industry[0] }}\n- Taille : {{ $('Scraping entreprise Linkedin').item.json.employeeCount }} employés\n- Site web : {{ $('Scraping entreprise Linkedin').item.json.websiteUrl }}\n- Description : {{ $('Scraping entreprise Linkedin').item.json.description }}\n\nRédige un message de premier contact LinkedIn qui respecte ces règles :\n- Commence par une observation spécifique sur leur secteur ou leur activité\n- Maximum 3 phrases\n- Zéro jargon commercial\n- Pose une question ouverte à la fin\n- Ton naturel et humain\n\nRetourne UNIQUEMENT le message, sans guillemets, sans signature."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2064,
+        -16
+      ],
+      "id": "2138b7a3-b7f1-4ced-a500-1af3ef93ba8e",
+      "name": "Premier message Linkedin",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2336,
+        -128
+      ],
+      "id": "fa4905d6-021b-40ea-8094-d410e7eea817",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit?gid=326424443#gid=326424443",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1221126375,
+          "mode": "list",
+          "cachedResultName": "Ignoré",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit#gid=1221126375"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Source": "={{ $('Qualifié ou non le lead').item.json.source }}",
+            "score": "={{ $('Qualifié ou non le lead').item.json.score }}",
+            "raison": "={{ $('Qualifié ou non le lead').item.json.raison }}",
+            "status": "={{ $json.status }}",
+            "company": "={{ $('Qualifié ou non le lead').item.json.company }}",
+            "website": "={{ $('Qualifié ou non le lead').item.json.website }}",
+            "résumé de l'entreprise": "={{ $('Merge2').item.json.description }}",
+            "Secteur d'activité": "={{ $('Json scoring').item.json.sector }}",
+            "telephone": "={{ $('Scraping lieu google Maps').item.json.phone ? $('Scraping lieu google Maps').item.json.phone.replace(/^\\+33 /, '0') : 'Non renseigné' }}",
+            "mail": "={{ $('Scraping lieu google Maps').item.json.emails[0] }}",
+            "mail 2": "={{ $('Scraping lieu google Maps').item.json.emails[1] }}",
+            "adresse ": "={{ $('Json scoring').item.json.address }}"
+          },
+          "matchingColumns": [
+            "company"
+          ],
+          "schema": [
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Secteur d'activité",
+              "displayName": "Secteur d'activité",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "adresse ",
+              "displayName": "adresse ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "telephone",
+              "displayName": "telephone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mail",
+              "displayName": "mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mail 2",
+              "displayName": "mail 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "résumé de l'entreprise",
+              "displayName": "résumé de l'entreprise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raison",
+              "displayName": "raison",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first message",
+              "displayName": "first message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_feedback",
+              "displayName": "review_feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        304
+      ],
+      "id": "4f0b9717-04b9-4280-8f82-d297b83d85f9",
+      "name": "Remplir Ignoré",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rE9qqRZg81jgmaNF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit?gid=326424443#gid=326424443",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 326424443,
+          "mode": "list",
+          "cachedResultName": "Qualifié",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FKiL7qHDzLcaa-TstbfsegJRWoCCrxROeighZAklxT0/edit#gid=326424443"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company": "={{ $('Merge4').item.json.company }}",
+            "website": "={{ $('Merge4').item.json.website }}",
+            "résumé de l'entreprise": "={{ $('Merge2').item.json.description }}",
+            "score": "={{ $('Json scoring').item.json.score }}",
+            "status": "={{ $('Qualifié').item.json.status }}",
+            "first message": "={{ $json['current message'] }}",
+            "review_status": "={{ $('Pret à etre envoyé').item.json.review_status }}",
+            "raison": "={{ $('Merge4').item.json.raison }}",
+            "adresse ": "={{ $('Merge4').item.json.address }}",
+            "telephone": "={{ $('Scraping lieu google Maps').item.json.phone ? $('Scraping lieu google Maps').item.json.phone.replace(/^\\+33 /, '0') : 'Non renseigné' }}",
+            "mail": "={{ $('Scraping lieu google Maps').item.json.emails[0] }}",
+            "mail 2": "={{ $('Scraping lieu google Maps').item.json.emails[1] }}",
+            "Secteur d'activité": "={{ $('Merge4').item.json.sector }}",
+            "Source": "={{ $('Merge4').item.json.source }}"
+          },
+          "matchingColumns": [
+            "company"
+          ],
+          "schema": [
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Secteur d'activité",
+              "displayName": "Secteur d'activité",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "adresse ",
+              "displayName": "adresse ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "telephone",
+              "displayName": "telephone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mail",
+              "displayName": "mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mail 2",
+              "displayName": "mail 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "résumé de l'entreprise",
+              "displayName": "résumé de l'entreprise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raison",
+              "displayName": "raison",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first message",
+              "displayName": "first message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_feedback",
+              "displayName": "review_feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4096,
+        -64
+      ],
+      "id": "3edb3381-23a4-4d7e-a442-332d1deb5217",
+      "name": "Remplir Qualifié",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rE9qqRZg81jgmaNF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "249b2e3d-e7fa-4a2b-9c8b-605930325775",
+              "leftValue": "={{ $('Json scoring').item.json.score }}",
+              "rightValue": 80,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "3ee59a02-9890-4af7-b359-5cda6f6c57f2",
+              "leftValue": "={{ $('Json scoring').item.json.source }}",
+              "rightValue": "LinkedIn",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        288
+      ],
+      "id": "74c09d70-14a7-413a-8bc1-78c6639dd500",
+      "name": "Qualifié Linkedin"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Scraping lieu google Maps",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Scraping entreprise Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Résumé de l'entreprise": {
+      "main": [
+        [
+          {
+            "node": "Recuperer tous les infos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring de l'entreprise": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifié": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ignoré": {
+      "main": [
+        [
+          {
+            "node": "Remplir Ignoré",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Premier message pour contacter le lead qualifié": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pour extraire le json ": {
+      "main": [
+        [
+          {
+            "node": "Pour voir si le message est cool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pour approuver le premier message": {
+      "main": [
+        [
+          {
+            "node": "Pour extraire le json ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json scoring": {
+      "main": [
+        [
+          {
+            "node": "Qualifié ou non le lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Remplir Qualifié",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pret à etre envoyé": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "revoir le message": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pour voir si le message est cool": {
+      "main": [
+        [
+          {
+            "node": "Pret à etre envoyé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "revoir le message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifié ou non le lead": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Qualifié Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reecriture du message": {
+      "main": [
+        [
+          {
+            "node": "Nouveau message modifié",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nouveau message modifié": {
+      "main": [
+        [
+          {
+            "node": "Pour approuver le premier message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Reecriture du message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message pas bon et fin de boucle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message pas bon et fin de boucle": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Scraping lieu google Maps": {
+      "main": [
+        [
+          {
+            "node": "Company Source Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scraping entreprise Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Même chose mais avec résumé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Source Website": {
+      "main": [
+        [
+          {
+            "node": "Résumé de l'entreprise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Même chose mais avec résumé": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Google maps ou Linkedin?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recuperer tous les infos": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring linkedin entreprise": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google maps ou Linkedin?": {
+      "main": [
+        [
+          {
+            "node": "Scoring de l'entreprise",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scoring linkedin entreprise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Premier message pour contacter le lead qualifié",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Premier message Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Qualifié",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Json scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Premier message Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Pour approuver le premier message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplir Qualifié": {
+      "main": [
+        []
+      ]
+    },
+    "Qualifié Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Ignoré",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a2a51a74-0b56-4b32-97b7-30b0cf9b67d1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "U4sPDDzJlZGiwMXO",
+  "tags": []
+}

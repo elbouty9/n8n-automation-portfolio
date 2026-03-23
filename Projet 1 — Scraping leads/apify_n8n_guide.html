@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Guide Apify + N8N</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+  h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #6b7280; font-size: 0.82rem; margin-bottom: 30px; }
+
+  .progress-bar { max-width: 660px; margin: 0 auto 28px; background: #1a1a2e; border-radius: 20px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); border-radius: 20px; transition: width 0.4s ease; }
+
+  .steps-container { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+  .step {
+    background: #1a1a2e;
+    border: 1.5px solid #2d2d4e;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .step.done { border-color: #4ade80; }
+  .step.active { border-color: #a78bfa; }
+
+  .step-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .step-header:hover { background: #1e1e35; }
+
+  .check {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid #4b5563;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.8rem; transition: all 0.2s; cursor: pointer;
+  }
+  .step.done .check { background: #4ade80; border-color: #4ade80; color: #0f0f1a; }
+  .step.active .check { border-color: #a78bfa; color: #a78bfa; }
+
+  .step-label { font-weight: 600; font-size: 0.92rem; flex: 1; }
+  .step-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: #2d2d4e; color: #9ca3af; }
+  .step.done .step-tag { background: #14532d; color: #4ade80; }
+
+  .step-body { display: none; padding: 0 18px 18px; border-top: 1px solid #2d2d4e; }
+  .step.active .step-body { display: block; padding-top: 16px; }
+
+  .step-body p { font-size: 0.87rem; color: #9ca3af; line-height: 1.7; margin-bottom: 10px; }
+  .step-body strong { color: #e0e0f0; }
+
+  .code-block {
+    background: #0a0a14; border: 1px solid #2d2d4e; border-radius: 8px;
+    padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 0.8rem;
+    color: #a78bfa; margin: 10px 0; overflow-x: auto; position: relative;
+  }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: #2d2d4e; border: none; color: #9ca3af;
+    font-size: 0.7rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: #7c3aed; color: white; }
+
+  .info-box {
+    background: #14293d; border: 1px solid #1e4d6b; border-radius: 8px;
+    padding: 10px 14px; font-size: 0.82rem; color: #7dd3fc; margin: 10px 0;
+  }
+  .warn-box {
+    background: #2d1f0a; border: 1px solid #6b3a1e; border-radius: 8px;
+    padding: 10px 14px; font-size: 0.82rem; color: #fbbf24; margin: 10px 0;
+  }
+
+  .field-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.82rem; }
+  .field-table th { background: #2d2d4e; padding: 8px 10px; text-align: left; color: #a78bfa; }
+  .field-table td { padding: 7px 10px; border-bottom: 1px solid #2d2d4e; color: #9ca3af; }
+  .field-table tr:last-child td { border-bottom: none; }
+  .field-table .val { color: #4ade80; font-family: monospace; }
+
+  .nav-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .btn {
+    padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+  }
+  .btn-primary { background: #7c3aed; color: white; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-secondary { background: #2d2d4e; color: #9ca3af; }
+  .btn-secondary:hover { background: #3d3d5e; }
+  .btn-done { background: #14532d; color: #4ade80; }
+  .btn-done:hover { background: #166534; }
+
+  .final-box {
+    max-width: 660px; margin: 20px auto 0;
+    background: #14293d; border: 1px solid #1e4d6b; border-radius: 14px;
+    padding: 20px; text-align: center; display: none;
+  }
+  .final-box h2 { color: #4ade80; margin-bottom: 8px; }
+  .final-box p { color: #7dd3fc; font-size: 0.87rem; }
+
+  .schema { background: #0a0a14; border-radius: 10px; padding: 14px; margin: 10px 0; font-family: monospace; font-size: 0.78rem; color: #9ca3af; line-height: 1.8; }
+  .schema .key { color: #60a5fa; }
+  .schema .val { color: #4ade80; }
+  .schema .comment { color: #4b5563; }
+</style>
+</head>
+<body>
+
+<h1>🗺️ Apify Google Maps → N8N</h1>
+<p class="subtitle">Guide interactif — coche chaque étape au fur et à mesure</p>
+
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<div class="steps-container" id="steps">
+
+  <!-- STEP 1 -->
+  <div class="step active" id="s1">
+    <div class="step-header" onclick="toggleStep('s1')">
+      <div class="check" onclick="markDone('s1', event)">✓</div>
+      <div class="step-label">1. Récupère ta clé API Apify</div>
+      <div class="step-tag">Apify</div>
+    </div>
+    <div class="step-body">
+      <p>Va sur <strong>apify.com</strong> → ton compte → <strong>Settings → Integrations → API tokens</strong></p>
+      <p>Crée un token et copie-le, tu en auras besoin dans N8N.</p>
+      <div class="info-box">💡 Le plan gratuit Apify donne ~5$ de crédits/mois, suffisant pour scraper ~500-1000 établissements Google Maps.</div>
+      <p>Ensuite, cherche l'acteur <strong>"Google Maps Scraper"</strong> dans le store Apify (par Compass). C'est le plus fiable et le mieux maintenu.</p>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s1'); openStep('s2')">✓ Fait, étape suivante</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header" onclick="toggleStep('s2')">
+      <div class="check" onclick="markDone('s2', event)">✓</div>
+      <div class="step-label">2. Configurer l'acteur dans Apify</div>
+      <div class="step-tag">Apify</div>
+    </div>
+    <div class="step-body">
+      <p>Dans l'acteur <strong>Google Maps Scraper</strong>, configure l'input JSON comme suit :</p>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+{
+  "searchStringsArray": ["agences marketing Paris"],
+  "maxCrawledPlacesPerSearch": 50,
+  "language": "fr",
+  "countryCode": "fr",
+  "exportPlaceUrls": false,
+  "additionalInfo": true
+}
+      </div>
+      <div class="warn-box">⚠️ Change <strong>"agences marketing Paris"</strong> par ta vraie recherche. Tu peux mettre plusieurs termes dans le tableau.</div>
+      <p>Lance un test rapide avec <strong>maxCrawledPlacesPerSearch: 5</strong> pour vérifier que ça tourne avant de brancher N8N.</p>
+
+      <p style="margin-top:12px;">Les champs importants que tu vas récupérer :</p>
+      <table class="field-table">
+        <tr><th>Champ Apify</th><th>Ce que c'est</th></tr>
+        <tr><td class="val">title</td><td>Nom de l'établissement</td></tr>
+        <tr><td class="val">address</td><td>Adresse complète</td></tr>
+        <tr><td class="val">phone</td><td>Téléphone</td></tr>
+        <tr><td class="val">website</td><td>Site web</td></tr>
+        <tr><td class="val">totalScore</td><td>Note Google (sur 5)</td></tr>
+        <tr><td class="val">reviewsCount</td><td>Nombre d'avis</td></tr>
+        <tr><td class="val">categoryName</td><td>Catégorie (ex: Agence marketing)</td></tr>
+      </table>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s2'); openStep('s3')">✓ Fait, étape suivante</button>
+        <button class="btn btn-secondary" onclick="openStep('s1')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header" onclick="toggleStep('s3')">
+      <div class="check" onclick="markDone('s3', event)">✓</div>
+      <div class="step-label">3. Créer le workflow N8N — nœud déclencheur</div>
+      <div class="step-tag">N8N</div>
+    </div>
+    <div class="step-body">
+      <p>Dans N8N, crée un nouveau workflow. Pour commencer, utilise un <strong>Manual Trigger</strong> (tu cliqueras manuellement pour lancer).</p>
+      <p>Plus tard tu pourras le remplacer par un <strong>Schedule Trigger</strong> (ex: tous les lundis à 8h).</p>
+      <div class="info-box">💡 N8N Cloud (gratuit jusqu'à 5 workflows actifs) ou N8N en local via Docker. Les deux fonctionnent pareil.</div>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s3'); openStep('s4')">✓ Fait, étape suivante</button>
+        <button class="btn btn-secondary" onclick="openStep('s2')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header" onclick="toggleStep('s4')">
+      <div class="check" onclick="markDone('s4', event)">✓</div>
+      <div class="step-label">4. Nœud HTTP Request → lancer le scraping</div>
+      <div class="step-tag">N8N</div>
+    </div>
+    <div class="step-body">
+      <p>Ajoute un nœud <strong>HTTP Request</strong> et configure-le ainsi :</p>
+      <table class="field-table">
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Method</td><td class="val">POST</td></tr>
+        <tr><td>URL</td><td class="val">https://api.apify.com/v2/acts/compass~crawler-google-places/runs</td></tr>
+        <tr><td>Authentication</td><td class="val">Header Auth</td></tr>
+        <tr><td>Header Name</td><td class="val">Authorization</td></tr>
+        <tr><td>Header Value</td><td class="val">Bearer TON_API_TOKEN</td></tr>
+        <tr><td>Content-Type</td><td class="val">application/json</td></tr>
+      </table>
+      <p style="margin-top:10px;">Body (JSON) :</p>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+{
+  "searchStringsArray": ["agences marketing Paris"],
+  "maxCrawledPlacesPerSearch": 50,
+  "language": "fr",
+  "countryCode": "fr"
+}
+      </div>
+      <div class="warn-box">⚠️ Ce nœud <strong>lance</strong> le scraping mais ne retourne pas encore les données — Apify travaille en asynchrone.</div>
+      <p>La réponse contiendra un <strong>runId</strong> que tu utiliseras à l'étape suivante.</p>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s4'); openStep('s5')">✓ Fait, étape suivante</button>
+        <button class="btn btn-secondary" onclick="openStep('s3')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header" onclick="toggleStep('s5')">
+      <div class="check" onclick="markDone('s5', event)">✓</div>
+      <div class="step-label">5. Attendre la fin + récupérer les résultats</div>
+      <div class="step-tag">N8N</div>
+    </div>
+    <div class="step-body">
+      <p>Apify prend du temps. Voici la stratégie la plus simple pour débutant :</p>
+      <p><strong>Option A (simple) :</strong> Ajoute un nœud <strong>Wait</strong> de 60 secondes après le lancement, puis un deuxième HTTP Request pour récupérer les données.</p>
+      <p><strong>Option B (robuste) :</strong> Utilise un webhook Apify → configure dans Apify un webhook qui appelle ton N8N quand le run est terminé.</p>
+      <div class="info-box">💡 Pour apprendre, commence par l'Option A. C'est plus simple à déboguer.</div>
+
+      <p style="margin-top:10px;">Nœud <strong>Wait</strong> → durée : <strong>60 secondes</strong></p>
+      <p style="margin-top:10px;">Puis un nouveau <strong>HTTP Request</strong> pour récupérer les résultats :</p>
+      <table class="field-table">
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Method</td><td class="val">GET</td></tr>
+        <tr><td>URL</td><td class="val">https://api.apify.com/v2/acts/compass~crawler-google-places/runs/last/dataset/items</td></tr>
+        <tr><td>Query param: token</td><td class="val">TON_API_TOKEN</td></tr>
+        <tr><td>Query param: limit</td><td class="val">50</td></tr>
+      </table>
+      <p style="margin-top:10px;">Tu récupères un tableau JSON avec tous tes leads 🎉</p>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s5'); openStep('s6')">✓ Fait, étape suivante</button>
+        <button class="btn btn-secondary" onclick="openStep('s4')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header" onclick="toggleStep('s6')">
+      <div class="check" onclick="markDone('s6', event)">✓</div>
+      <div class="step-label">6. Normaliser les données avec un Set node</div>
+      <div class="step-tag">N8N</div>
+    </div>
+    <div class="step-body">
+      <p>Ajoute un nœud <strong>Set</strong> pour renommer les champs Apify en champs standardisés. Ça facilitera l'ajout d'Apollo plus tard.</p>
+      <div class="schema">
+<span class="comment">// Mapping dans le Set node</span>
+<span class="key">nom</span>         → <span class="val">{{ $json.title }}</span>
+<span class="key">adresse</span>     → <span class="val">{{ $json.address }}</span>
+<span class="key">telephone</span>   → <span class="val">{{ $json.phone }}</span>
+<span class="key">site_web</span>    → <span class="val">{{ $json.website }}</span>
+<span class="key">note</span>        → <span class="val">{{ $json.totalScore }}</span>
+<span class="key">nb_avis</span>     → <span class="val">{{ $json.reviewsCount }}</span>
+<span class="key">categorie</span>   → <span class="val">{{ $json.categoryName }}</span>
+<span class="key">source</span>      → <span class="val">"apify_gmaps"</span>
+<span class="key">date_scrape</span> → <span class="val">{{ $now }}</span>
+      </div>
+      <div class="info-box">💡 Le champ <strong>source</strong> fixé à "apify_gmaps" te permettra de savoir d'où vient chaque lead dans ton Google Sheet.</div>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s6'); openStep('s7')">✓ Fait, étape suivante</button>
+        <button class="btn btn-secondary" onclick="openStep('s5')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header" onclick="toggleStep('s7')">
+      <div class="check" onclick="markDone('s7', event)">✓</div>
+      <div class="step-label">7. Stocker dans Google Sheets</div>
+      <div class="step-tag">N8N</div>
+    </div>
+    <div class="step-body">
+      <p>Ajoute un nœud <strong>Google Sheets</strong> en mode <strong>"Append or Update Row"</strong>.</p>
+      <p>Prépare ton Google Sheet avec ces colonnes :</p>
+      <table class="field-table">
+        <tr><th>Colonne</th><th>Valeur N8N</th></tr>
+        <tr><td>Nom</td><td class="val">{{ $json.nom }}</td></tr>
+        <tr><td>Adresse</td><td class="val">{{ $json.adresse }}</td></tr>
+        <tr><td>Téléphone</td><td class="val">{{ $json.telephone }}</td></tr>
+        <tr><td>Site Web</td><td class="val">{{ $json.site_web }}</td></tr>
+        <tr><td>Note Google</td><td class="val">{{ $json.note }}</td></tr>
+        <tr><td>Nb Avis</td><td class="val">{{ $json.nb_avis }}</td></tr>
+        <tr><td>Catégorie</td><td class="val">{{ $json.categorie }}</td></tr>
+        <tr><td>Source</td><td class="val">{{ $json.source }}</td></tr>
+        <tr><td>Date Scrape</td><td class="val">{{ $json.date_scrape }}</td></tr>
+        <tr><td>Score Lead</td><td class="val"><em>(vide pour l'instant)</em></td></tr>
+        <tr><td>Message</td><td class="val"><em>(vide pour l'instant)</em></td></tr>
+        <tr><td>Statut</td><td class="val">Nouveau</td></tr>
+      </table>
+      <div class="warn-box">⚠️ Pour la dédup : utilise <strong>"Matching Columns"</strong> = Téléphone ou Site Web. N8N mettra à jour si ça existe déjà au lieu de créer un doublon.</div>
+      <div class="nav-btns">
+        <button class="btn btn-done" onclick="markDone('s7'); showFinal()">🎉 Workflow terminé !</button>
+        <button class="btn btn-secondary" onclick="openStep('s6')">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="final-box" id="final">
+  <h2>🎉 Bravo, ton pipeline Apify → N8N → Google Sheets est prêt !</h2>
+  <p style="margin-top:10px;">Prochaine étape : ajouter le <strong>scoring GPT</strong> entre le Set node et Google Sheets, puis brancher <strong>Apollo.io</strong> en deuxième source avec un Merge node.</p>
+  <p style="margin-top:8px; color: #4ade80;">Tu peux relancer le guide à tout moment en cochant/décochant les étapes.</p>
+</div>
+
+<script>
+function toggleStep(id) {
+  const el = document.getElementById(id);
+  const isActive = el.classList.contains('active');
+  document.querySelectorAll('.step').forEach(s => {
+    if (!s.classList.contains('done')) s.classList.remove('active');
+  });
+  if (!isActive) el.classList.add('active');
+}
+
+function openStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function markDone(id, event) {
+  if (event) event.stopPropagation();
+  const el = document.getElementById(id);
+  el.classList.toggle('done');
+  el.querySelector('.step-tag').textContent = el.classList.contains('done') ? '✓ Fait' : getTag(id);
+  updateProgress();
+}
+
+function getTag(id) {
+  const tags = { s1: 'Apify', s2: 'Apify', s3: 'N8N', s4: 'N8N', s5: 'N8N', s6: 'N8N', s7: 'N8N' };
+  return tags[id];
+}
+
+function updateProgress() {
+  const total = 7;
+  const done = document.querySelectorAll('.step.done').length;
+  document.getElementById('progress').style.width = (done / total * 100) + '%';
+}
+
+function showFinal() {
+  markDone('s7');
+  document.getElementById('final').style.display = 'block';
+  document.getElementById('final').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyCode(btn) {
+  const block = btn.parentElement;
+  const text = block.innerText.replace('Copier', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copié';
+    setTimeout(() => btn.textContent = 'Copier', 2000);
+  });
+}
+</script>
+</body>
+</html>

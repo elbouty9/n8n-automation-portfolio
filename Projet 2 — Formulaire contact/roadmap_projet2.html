@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 2 — Formulaire → Notification</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+
+h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #6b7280; font-size: 0.82rem; margin-bottom: 32px; }
+
+.workflow {
+  max-width: 680px; margin: 0 auto 30px;
+  background: #1a1a2e; border: 1.5px solid #2d2d4e;
+  border-radius: 14px; padding: 20px;
+}
+.workflow h3 { color: #a78bfa; font-size: 0.9rem; margin-bottom: 14px; }
+.flow { display: flex; flex-direction: column; gap: 0; align-items: center; }
+.flow-step {
+  width: 100%; background: #0f0f1a; border-radius: 10px;
+  padding: 10px 14px; font-size: 0.85rem;
+  border-left: 3px solid #7c3aed;
+}
+.flow-arrow { color: #4f46e5; font-size: 0.8rem; margin: 4px 0; }
+
+.phases { display: flex; flex-direction: column; gap: 0; align-items: center; max-width: 680px; margin: 0 auto; }
+
+.phase { width: 100%; border-radius: 16px; overflow: hidden; border: 1.5px solid #2d2d4e; }
+.phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; transition: background 0.2s; }
+.phase-header:hover { filter: brightness(1.1); }
+.phase-icon { font-size: 1.5rem; }
+.phase-meta { flex: 1; }
+.phase-title { font-weight: 700; font-size: 1rem; }
+.phase-sub { font-size: 0.78rem; opacity: 0.7; margin-top: 2px; }
+.phase-duration { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.phase-chevron { font-size: 0.8rem; transition: transform 0.2s; opacity: 0.6; }
+.phase.open .phase-chevron { transform: rotate(90deg); }
+
+.phase-body { display: none; padding: 0 20px 20px; border-top: 1px solid #2d2d4e; }
+.phase.open .phase-body { display: block; }
+
+.steps { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.step { background: #0f0f1a; border-radius: 10px; padding: 12px 14px; border-left: 3px solid; }
+.step h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+.step p { font-size: 0.8rem; color: #9ca3af; line-height: 1.6; }
+.step .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #1a1a2e; color: #a78bfa; }
+
+.connector { width: 2px; height: 24px; background: linear-gradient(#7c3aed44, #4f46e544); margin: 0 auto; }
+
+.p1 .phase-header { background: #1a2035; }
+.p1 .phase-duration { background: #1e3a5f; color: #60a5fa; }
+.p1 .step { border-color: #3b82f6; }
+
+.p2 .phase-header { background: #1e1535; }
+.p2 .phase-duration { background: #2d1f5e; color: #a78bfa; }
+.p2 .step { border-color: #7c3aed; }
+
+.p3 .phase-header { background: #0f2a1a; }
+.p3 .phase-duration { background: #1f3d2b; color: #4ade80; }
+.p3 .step { border-color: #22c55e; }
+
+.p4 .phase-header { background: #2a1f0a; }
+.p4 .phase-duration { background: #3d2a0a; color: #fbbf24; }
+.p4 .step { border-color: #f59e0b; }
+
+.tip { max-width: 680px; width: 100%; background: #14293d; border: 1px solid #1e4d6b; border-radius: 12px; padding: 14px 18px; margin: 20px auto 0; font-size: 0.83rem; color: #7dd3fc; line-height: 1.7; }
+.tip strong { color: #38bdf8; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>📋 Projet 2 — Formulaire → Notification</h1>
+<p class="subtitle">Le workflow le plus demandé par les PME · Simple mais très vendable</p>
+
+<div class="workflow" style="max-width:680px;margin:0 auto 30px;">
+  <h3>🔄 Le workflow final</h3>
+  <div class="flow">
+    <div class="flow-step">📝 Tally.so — Formulaire de contact rempli</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">⚡ Webhook N8N — Reçoit les données du formulaire</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🔀 IF node — Triage selon le type de demande</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🤖 GPT — Résumé et qualification de la demande</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📧 Gmail + 💬 Slack — Notification formatée envoyée</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">📊 Google Sheets — Toutes les demandes archivées</div>
+  </div>
+</div>
+
+<div class="phases">
+
+  <div class="phase p1 open" id="ph1">
+    <div class="phase-header" onclick="toggle('ph1')">
+      <div class="phase-icon">🛠️</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 1 — Créer le formulaire Tally</div>
+        <div class="phase-sub">Gratuit · 10 minutes</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📝 Créer un compte Tally.so</h4>
+          <p>Va sur tally.so et crée un compte gratuit. Crée un formulaire avec : Nom, Email, Téléphone, Type de demande (liste déroulante), Message.</p>
+          <div class="tags"><span class="tag">Tally.so</span><span class="tag">Gratuit</span></div>
+        </div>
+        <div class="step">
+          <h4>⚡ Brancher le Webhook N8N</h4>
+          <p>Dans Tally → Integrations → Webhooks → colle l'URL du Webhook node N8N. Chaque soumission enverra les données directement à N8N.</p>
+          <div class="tags"><span class="tag">Webhook</span><span class="tag">N8N</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p2" id="ph2">
+    <div class="phase-header" onclick="toggle('ph2')">
+      <div class="phase-icon">🔀</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 2 — Triage et qualification IA</div>
+        <div class="phase-sub">IF node + GPT</div>
+      </div>
+      <div class="phase-duration">~1h</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🔀 IF node — Triage par type</h4>
+          <p>Si "Type de demande" = Urgent → priorité haute. Si = Devis → pipeline commercial. Si = Support → ticket support. Tu apprends à router différemment selon les données.</p>
+          <div class="tags"><span class="tag">IF node</span><span class="tag">Routing</span></div>
+        </div>
+        <div class="step">
+          <h4>🤖 GPT — Résumé de la demande</h4>
+          <p>GPT lit le message et retourne un résumé en 1 phrase + niveau de priorité + action recommandée. Parfait pour les équipes qui reçoivent beaucoup de demandes.</p>
+          <div class="tags"><span class="tag">OpenAI</span><span class="tag">Résumé</span><span class="tag">Priorité</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p3" id="ph3">
+    <div class="phase-header" onclick="toggle('ph3')">
+      <div class="phase-icon">📧</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 3 — Notifications Gmail + Slack</div>
+        <div class="phase-sub">Les deux canaux les plus demandés</div>
+      </div>
+      <div class="phase-duration">~1h</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📧 Gmail — Email formaté</h4>
+          <p>Envoie un email HTML propre avec toutes les infos du prospect + résumé GPT + bouton "Répondre". Tu apprends le node Gmail et le formatage HTML dans N8N.</p>
+          <div class="tags"><span class="tag">Gmail</span><span class="tag">HTML</span></div>
+        </div>
+        <div class="step">
+          <h4>💬 Slack — Notification équipe</h4>
+          <p>Envoie un message Slack formaté avec les infos clés. Si urgent → mention @channel. Tu apprends le node Slack et les messages conditionnels.</p>
+          <div class="tags"><span class="tag">Slack</span><span class="tag">Mentions</span><span class="tag">Conditionnel</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p4" id="ph4">
+    <div class="phase-header" onclick="toggle('ph4')">
+      <div class="phase-icon">📊</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 4 — Archivage & confirmation</div>
+        <div class="phase-sub">Google Sheets + email de confirmation automatique</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📊 Google Sheets — Archive toutes les demandes</h4>
+          <p>Tu connais déjà ce node — facile ! Date, nom, email, type, résumé GPT, priorité, statut.</p>
+          <div class="tags"><span class="tag">Google Sheets</span></div>
+        </div>
+        <div class="step">
+          <h4>✅ Email de confirmation au prospect</h4>
+          <p>GPT génère un email de confirmation personnalisé envoyé automatiquement au prospect. "Merci [Prénom], nous avons bien reçu votre demande concernant [sujet]..."</p>
+          <div class="tags"><span class="tag">Gmail</span><span class="tag">GPT</span><span class="tag">Personnalisé</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" style="max-width:680px;">
+  <strong>💡 Pourquoi ce projet est parfait pour ton portfolio</strong>
+  C'est le workflow n°1 demandé par les PME. Toute entreprise avec un formulaire de contact peut en bénéficier. Simple à expliquer, rapide à livrer, et tu peux le vendre entre 300€ et 800€ en freelance une fois maîtrisé.
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

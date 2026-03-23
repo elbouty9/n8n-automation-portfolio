@@ -1,0 +1,643 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-onboarding",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8564e5b8-b33f-4d5d-b793-bc7ef0458f86",
+      "name": "Webhook",
+      "webhookId": "1bdac4ef-e0c6-42d3-af2d-3a3ace227ab3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const session = $input.first().json.body.data.object;\n\nreturn [{\n  json: {\n    nom: session.customer_details.name ?? '',\n    email: session.customer_details.email ?? '',\n    telephone: session.customer_details.phone ?? '',\n    montant: (session.amount_total / 100) + '€',\n    produit: session.metadata?.produit ?? 'Onboarding Agence',\n    date: new Date(session.created * 1000).toLocaleDateString('fr-FR')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0761d104-ac8a-49d6-80e1-35450d39f720",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appiTvIT5NSYxYBwz",
+          "mode": "list",
+          "cachedResultName": "CRM Clients",
+          "cachedResultUrl": "https://airtable.com/appiTvIT5NSYxYBwz"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblTFJsUHSPHXXczY",
+          "mode": "list",
+          "cachedResultName": "Clients",
+          "cachedResultUrl": "https://airtable.com/appiTvIT5NSYxYBwz/tblTFJsUHSPHXXczY"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nom": "={{ $('Code in JavaScript').item.json.nom }}",
+            "Email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Telephone": "={{ $('Code in JavaScript').item.json.telephone }}",
+            "Produit": "={{ $('Code in JavaScript').item.json.produit }}",
+            "Montant": "={{ $('Code in JavaScript').item.json.montant }}",
+            "Date": "={{ $('Code in JavaScript').item.json.date }}",
+            "Statut Onboarding": "Nouveau"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nom",
+              "displayName": "Nom",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Telephone",
+              "displayName": "Telephone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Produit",
+              "displayName": "Produit",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Montant",
+              "displayName": "Montant",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Statut Onboarding",
+              "displayName": "Statut Onboarding",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nouveau",
+                  "value": "Nouveau"
+                },
+                {
+                  "name": "En cours",
+                  "value": "En cours"
+                },
+                {
+                  "name": "Terminé",
+                  "value": "Terminé"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        0
+      ],
+      "id": "32c4bbc4-f035-4900-bbff-6c0db727b3a3",
+      "name": "Fichier Client Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "CR6MOvzpZeF8LeRS",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript').item.json.email }}",
+        "subject": "=🎉 Bienvenue chez nous,  {{ $('Code in JavaScript').item.json.nom }}",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "0c44041a-ef1b-4de8-848c-9f9bc483e918",
+      "name": "Mail de bienvenue",
+      "webhookId": "e048f6ad-2ccc-4140-baae-ec7f84d3a731",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ku3Rgy4DGrWvoKdd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en relation client pour une agence digitale.\n\nUn nouveau client vient de payer et doit être accueilli chaleureusement.\n\nInformations du client :\n- Nom : {{ $json.nom }}\n- Produit acheté : {{ $json.produit }}\n- Montant : {{ $json.montant }}\n- Date : {{ $json.date }}\n\nRédige un email de bienvenue personnalisé qui :\n- Commence par féliciter le client pour son choix\n- Mentionne le produit acheté et le montant\n- Explique les prochaines étapes (appel découverte, kick-off, livraison)\n- Termine avec une note chaleureuse et professionnelle\n- Ton naturel, humain, pas corporate\n\nRetourne UNIQUEMENT le contenu de l'email, sans objet, sans signature. \nFormate ta réponse en HTML propre avec des balises <p>, <strong>, <br> etc."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2552bfab-def7-4381-9f5d-05d9ecd04281",
+      "name": "Rédiger Mail de bienvenue",
+      "credentials": {
+        "openAiApi": {
+          "id": "92Sw6zwXOpgHrKi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const nom = $('Code in JavaScript').item.json.nom;\n\nreturn [\n  { json: { tache: \"📞 Appel découverte (30-45 min)\", client: nom, statut: \"Not started\", delai: 1 }},\n  { json: { tache: \"📄 Envoi contrat\", client: nom, statut: \"Not started\", delai: 2 }},\n  { json: { tache: \"🛠️ Accès outils et ressources\", client: nom, statut: \"Not started\", delai: 3 }},\n  { json: { tache: \"🚀 Réunion kick-off\", client: nom, statut: \"Not started\", delai: 7 }}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "5a3fa235-0ea2-409f-a8be-d233d38d8fea",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "7fade7f7-1fb0-46ff-9336-c1b64b4b91d2",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        224
+      ],
+      "id": "18a23ac3-1125-4d97-8e15-65e230d5b4c0"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "31e439e8-9083-80e9-8f33-d6113d5fc578",
+          "mode": "list",
+          "cachedResultName": "Tâches Onboarding",
+          "cachedResultUrl": "https://www.notion.so/31e439e8908380e98f33d6113d5fc578"
+        },
+        "title": "={{ $json.tache }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Client|rich_text",
+              "textContent": "={{ $json.client }}"
+            },
+            {
+              "key": "Status|status",
+              "statusValue": "={{ $json.statut }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        -16
+      ],
+      "id": "dc951c83-e769-4065-9595-c45407a7672e",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "DV65S6TcPVLls6VQ",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/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",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🎉 Nouveau client onboardé !\\n\\n👤 *{{ $('Code in JavaScript1').item.json.client }}*\\n📧 {{ $('Code in JavaScript').item.json.email }}\\n💰 {{ $('Code in JavaScript').item.json.montant }}\\n📦 {{ $('Code in JavaScript').item.json.produit }}\\n\\n✅ Email de bienvenue envoyé\\n✅ Fiche Airtable créée\\n✅ 4 tâches Notion créées\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2096,
+        -16
+      ],
+      "id": "19401275-df27-4513-9921-8ac57fd850c8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        -16
+      ],
+      "id": "c079702e-881c-43dc-a197-10ee63ec048e",
+      "name": "Limit"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1376382.hstgr.cloud",
+            "user-agent": "Stripe/1.0 (+https://stripe.com/docs/webhooks)",
+            "content-length": "3696",
+            "accept": "*/*; q=0.5, application/json",
+            "cache-control": "no-cache",
+            "content-type": "application/json; charset=utf-8",
+            "stripe-signature": "t=1773072777,v1=f0b91080e9554250e50a0fe9cacd7417e8bd673715df3b13e868a8e1a22033fb,v0=1b4dc066dedebd55be04350ccedb4c1066f667d35344e1accea5c284fbd37161",
+            "x-forwarded-for": "52.15.183.38",
+            "x-forwarded-host": "n8n.srv1376382.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "1f63b6e494f5",
+            "x-real-ip": "52.15.183.38",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id": "evt_1T963QJU7dHHGzQIqefYEXbB",
+            "object": "event",
+            "api_version": "2024-04-10",
+            "created": 1773071352,
+            "data": {
+              "object": {
+                "id": "cs_test_a1J3MnhwzMWsmvvTfM2tL0Tl9odxFGHlRcpGStmHBnTtriO51hihMfF16K",
+                "object": "checkout.session",
+                "adaptive_pricing": {
+                  "enabled": true
+                },
+                "after_expiration": null,
+                "allow_promotion_codes": false,
+                "amount_subtotal": 50000,
+                "amount_total": 50000,
+                "automatic_tax": {
+                  "enabled": false,
+                  "liability": null,
+                  "provider": null,
+                  "status": null
+                },
+                "billing_address_collection": "auto",
+                "cancel_url": "https://stripe.com",
+                "client_reference_id": null,
+                "client_secret": null,
+                "collected_information": null,
+                "consent": null,
+                "consent_collection": {
+                  "payment_method_reuse_agreement": null,
+                  "promotions": "none",
+                  "terms_of_service": "none"
+                },
+                "created": 1773071328,
+                "currency": "eur",
+                "currency_conversion": null,
+                "custom_fields": [],
+                "custom_text": {
+                  "after_submit": null,
+                  "shipping_address": null,
+                  "submit": null,
+                  "terms_of_service_acceptance": null
+                },
+                "customer": null,
+                "customer_account": null,
+                "customer_creation": "if_required",
+                "customer_details": {
+                  "address": {
+                    "city": null,
+                    "country": "FR",
+                    "line1": null,
+                    "line2": null,
+                    "postal_code": null,
+                    "state": null
+                  },
+                  "business_name": null,
+                  "email": "essac92@gmail.com",
+                  "individual_name": null,
+                  "name": "jérémy taverne",
+                  "phone": null,
+                  "tax_exempt": "none",
+                  "tax_ids": []
+                },
+                "customer_email": null,
+                "discounts": [],
+                "expires_at": 1773157728,
+                "invoice": null,
+                "invoice_creation": {
+                  "enabled": false,
+                  "invoice_data": {
+                    "account_tax_ids": null,
+                    "custom_fields": null,
+                    "description": null,
+                    "footer": null,
+                    "issuer": null,
+                    "metadata": {},
+                    "rendering_options": null
+                  }
+                },
+                "livemode": false,
+                "locale": "auto",
+                "metadata": {},
+                "mode": "payment",
+                "origin_context": null,
+                "payment_intent": "pi_3T963PJU7dHHGzQI0Fhu3nnS",
+                "payment_link": "plink_1T95ifJU7dHHGzQIDjTy19Tw",
+                "payment_method_collection": "if_required",
+                "payment_method_configuration_details": {
+                  "id": "pmc_1RekR9JU7dHHGzQIryn1R3dP",
+                  "parent": null
+                },
+                "payment_method_options": {
+                  "card": {
+                    "request_three_d_secure": "automatic"
+                  }
+                },
+                "payment_method_types": [
+                  "card",
+                  "bancontact",
+                  "eps",
+                  "klarna",
+                  "link"
+                ],
+                "payment_status": "paid",
+                "permissions": null,
+                "phone_number_collection": {
+                  "enabled": false
+                },
+                "recovered_from": null,
+                "saved_payment_method_options": null,
+                "setup_intent": null,
+                "shipping_address_collection": null,
+                "shipping_cost": null,
+                "shipping_details": null,
+                "shipping_options": [],
+                "status": "complete",
+                "submit_type": "auto",
+                "subscription": null,
+                "success_url": "https://stripe.com",
+                "total_details": {
+                  "amount_discount": 0,
+                  "amount_shipping": 0,
+                  "amount_tax": 0
+                },
+                "ui_mode": "hosted",
+                "url": null,
+                "wallet_options": null
+              }
+            },
+            "livemode": false,
+            "pending_webhooks": 1,
+            "request": {
+              "id": null,
+              "idempotency_key": null
+            },
+            "type": "checkout.session.completed"
+          },
+          "webhookUrl": "https://n8n.srv1376382.hstgr.cloud/webhook/stripe-onboarding",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Rédiger Mail de bienvenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail de bienvenue": {
+      "main": [
+        [
+          {
+            "node": "Fichier Client Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rédiger Mail de bienvenue": {
+      "main": [
+        [
+          {
+            "node": "Mail de bienvenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fichier Client Airtable": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2239acee-847b-4f36-8b0a-7c8fa5b3b3c5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dae72343f8020f80402854a16cdcc62a3880287305904eb8421aaed8236d04b4"
+  },
+  "id": "hbyv2Mon4zqLw3zh",
+  "tags": []
+}

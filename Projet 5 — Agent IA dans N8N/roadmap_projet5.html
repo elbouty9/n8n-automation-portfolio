@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 5 — Agent IA N8N</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; min-height: 100vh; padding: 30px 20px; }
+h1 { text-align: center; font-size: 1.4rem; color: #a78bfa; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #6b7280; font-size: 0.82rem; margin-bottom: 32px; }
+.workflow { max-width: 680px; margin: 0 auto 30px; background: #1a1a2e; border: 1.5px solid #2d2d4e; border-radius: 14px; padding: 20px; }
+.workflow h3 { color: #a78bfa; font-size: 0.9rem; margin-bottom: 14px; }
+.flow { display: flex; flex-direction: column; gap: 0; align-items: center; }
+.flow-step { width: 100%; background: #0f0f1a; border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; border-left: 3px solid #7c3aed; }
+.flow-arrow { color: #4f46e5; font-size: 0.8rem; margin: 4px 0; }
+.phases { display: flex; flex-direction: column; gap: 0; align-items: center; max-width: 680px; margin: 0 auto; }
+.phase { width: 100%; border-radius: 16px; overflow: hidden; border: 1.5px solid #2d2d4e; }
+.phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; transition: background 0.2s; }
+.phase-header:hover { filter: brightness(1.1); }
+.phase-icon { font-size: 1.5rem; }
+.phase-meta { flex: 1; }
+.phase-title { font-weight: 700; font-size: 1rem; }
+.phase-sub { font-size: 0.78rem; opacity: 0.7; margin-top: 2px; }
+.phase-duration { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.phase-chevron { font-size: 0.8rem; transition: transform 0.2s; opacity: 0.6; }
+.phase.open .phase-chevron { transform: rotate(90deg); }
+.phase-body { display: none; padding: 0 20px 20px; border-top: 1px solid #2d2d4e; }
+.phase.open .phase-body { display: block; }
+.steps { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.step { background: #0f0f1a; border-radius: 10px; padding: 12px 14px; border-left: 3px solid; }
+.step h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+.step p { font-size: 0.8rem; color: #9ca3af; line-height: 1.6; }
+.step .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #1a1a2e; color: #a78bfa; }
+.connector { width: 2px; height: 24px; background: linear-gradient(#7c3aed44, #4f46e544); margin: 0 auto; }
+.p1 .phase-header { background: #1a2035; }
+.p1 .phase-duration { background: #1e3a5f; color: #60a5fa; }
+.p1 .step { border-color: #3b82f6; }
+.p2 .phase-header { background: #1e1535; }
+.p2 .phase-duration { background: #2d1f5e; color: #a78bfa; }
+.p2 .step { border-color: #7c3aed; }
+.p3 .phase-header { background: #0f2a1a; }
+.p3 .phase-duration { background: #1f3d2b; color: #4ade80; }
+.p3 .step { border-color: #22c55e; }
+.p4 .phase-header { background: #2a1f0a; }
+.p4 .phase-duration { background: #3d2a0a; color: #fbbf24; }
+.p4 .step { border-color: #f59e0b; }
+.p5 .phase-header { background: #1f1a35; }
+.p5 .phase-duration { background: #2d1f5e; color: #c084fc; }
+.p5 .step { border-color: #c084fc; }
+.tip { max-width: 680px; width: 100%; background: #14293d; border: 1px solid #1e4d6b; border-radius: 12px; padding: 14px 18px; margin: 20px auto 0; font-size: 0.83rem; color: #7dd3fc; line-height: 1.7; }
+.tip strong { color: #38bdf8; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🤖 Projet 5 — Agent IA dans N8N</h1>
+<p class="subtitle">Gmail → Agent IA → Décisions autonomes · Le niveau supérieur</p>
+
+<div class="workflow" style="max-width:680px;margin:0 auto 30px;">
+  <h3>🔄 Le workflow final</h3>
+  <div class="flow">
+    <div class="flow-step">📧 Gmail Trigger — Nouvel email reçu</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🤖 AI Agent — Analyse et décide quoi faire</div>
+    <div class="flow-arrow">▼ (selon la décision de l'agent)</div>
+    <div class="flow-step">📅 Outil 1 — Créer un événement Google Calendar</div>
+    <div class="flow-arrow">ou</div>
+    <div class="flow-step">📓 Outil 2 — Créer une tâche Notion</div>
+    <div class="flow-arrow">ou</div>
+    <div class="flow-step">📧 Outil 3 — Répondre à l'email automatiquement</div>
+    <div class="flow-arrow">ou</div>
+    <div class="flow-step">💬 Outil 4 — Envoyer une alerte Slack</div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step">🧠 Mémoire — L'agent se souvient des échanges précédents</div>
+  </div>
+</div>
+
+<div class="phases">
+
+  <div class="phase p1 open" id="ph1">
+    <div class="phase-header" onclick="toggle('ph1')">
+      <div class="phase-icon">🧠</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 1 — Comprendre le node AI Agent</div>
+        <div class="phase-sub">Le cerveau du workflow · Nouveau concept clé</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🧠 C'est quoi un AI Agent ?</h4>
+          <p>Contrairement à GPT qui répond juste à une question, un AI Agent peut utiliser des outils, prendre des décisions et enchaîner des actions de façon autonome. Il décide lui-même quoi faire selon le contexte — c'est le vrai saut vers l'automatisation intelligente.</p>
+          <div class="tags"><span class="tag">AI Agent</span><span class="tag">Nouveau !</span><span class="tag">Concept clé</span></div>
+        </div>
+        <div class="step">
+          <h4>⚙️ Configurer le node AI Agent dans N8N</h4>
+          <p>N8N a un node natif "AI Agent" qui permet de connecter un LLM (GPT) avec des outils. Tu lui donnes un rôle, des instructions et des outils disponibles — il choisit lui-même lesquels utiliser selon chaque situation.</p>
+          <div class="tags"><span class="tag">N8N AI Agent</span><span class="tag">System prompt</span><span class="tag">Tools</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p2" id="ph2">
+    <div class="phase-header" onclick="toggle('ph2')">
+      <div class="phase-icon">📧</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 2 — Gmail Trigger + contexte email</div>
+        <div class="phase-sub">Déclencher l'agent sur chaque nouvel email</div>
+      </div>
+      <div class="phase-duration">~20 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📧 Gmail Trigger — Surveiller la boite mail</h4>
+          <p>Le workflow se déclenche à chaque nouvel email reçu. L'agent reçoit l'expéditeur, l'objet et le contenu de l'email pour l'analyser et décider de la meilleure action.</p>
+          <div class="tags"><span class="tag">Gmail Trigger</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p3" id="ph3">
+    <div class="phase-header" onclick="toggle('ph3')">
+      <div class="phase-icon">🛠️</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 3 — Connecter les outils à l'agent</div>
+        <div class="phase-sub">Calendar + Notion + Gmail + Slack</div>
+      </div>
+      <div class="phase-duration">~1h</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>📅 Google Calendar — Créer des événements</h4>
+          <p>Si l'email contient une demande de réunion → l'agent crée automatiquement l'événement dans Calendar avec la date, l'heure et les participants. Nouveau node à apprendre !</p>
+          <div class="tags"><span class="tag">Google Calendar</span><span class="tag">Nouveau !</span></div>
+        </div>
+        <div class="step">
+          <h4>📓 Notion — Créer des tâches</h4>
+          <p>Si l'email contient une action à faire → l'agent crée une tâche dans Notion automatiquement. Tu connais déjà ce node !</p>
+          <div class="tags"><span class="tag">Notion</span><span class="tag">Connu ✓</span></div>
+        </div>
+        <div class="step">
+          <h4>📧 Gmail — Répondre automatiquement</h4>
+          <p>Si l'email est une question simple → l'agent génère et envoie une réponse automatique. Si c'est complexe → il alerte sur Slack.</p>
+          <div class="tags"><span class="tag">Gmail</span><span class="tag">Slack</span><span class="tag">Connu ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p4" id="ph4">
+    <div class="phase-header" onclick="toggle('ph4')">
+      <div class="phase-icon">🧠</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 4 — Ajouter la mémoire à l'agent</div>
+        <div class="phase-sub">L'agent se souvient des échanges précédents</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🧠 Window Buffer Memory</h4>
+          <p>Sans mémoire l'agent oublie tout entre chaque email. Avec le node "Window Buffer Memory" il garde le contexte des N derniers échanges — il peut donc faire le lien entre les emails d'un même thread.</p>
+          <div class="tags"><span class="tag">Memory node</span><span class="tag">Nouveau !</span><span class="tag">Concept avancé</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase p5" id="ph5">
+    <div class="phase-header" onclick="toggle('ph5')">
+      <div class="phase-icon">🎯</div>
+      <div class="phase-meta">
+        <div class="phase-title">Étape 5 — System prompt et instructions</div>
+        <div class="phase-sub">Définir le rôle et les règles de l'agent</div>
+      </div>
+      <div class="phase-duration">~30 min</div>
+      <div class="phase-chevron">▶</div>
+    </div>
+    <div class="phase-body">
+      <div class="steps">
+        <div class="step">
+          <h4>🎯 System prompt — Le cerveau de l'agent</h4>
+          <p>Le system prompt définit qui est l'agent, ce qu'il peut faire et ses règles de décision. C'est la partie la plus importante — un bon system prompt fait toute la différence entre un agent utile et un agent inutile.</p>
+          <div class="tags"><span class="tag">System prompt</span><span class="tag">Prompt engineering</span></div>
+        </div>
+        <div class="step">
+          <h4>🔄 Tester et affiner</h4>
+          <p>On testera avec différents types d'emails pour vérifier que l'agent prend les bonnes décisions. C'est là qu'on apprend vraiment à travailler avec les agents IA !</p>
+          <div class="tags"><span class="tag">Testing</span><span class="tag">Iteration</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" style="max-width:680px;">
+  <strong>💡 Pourquoi ce projet change tout</strong>
+  Les projets 1-4 exécutaient des actions prédéfinies. Le projet 5 introduit un agent qui DÉCIDE de façon autonome. C'est la compétence la plus recherchée en 2025-2026 — les entreprises veulent des agents qui remplacent des tâches cognitives, pas juste des automatisations simples. Avec ce projet tu passes dans une autre catégorie de valeur !
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>
