@@ -170,7 +170,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://hooks.slack.com/services/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",
+        "url": "=VOTRE_WEBHOOK_SLACK_ICI",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
