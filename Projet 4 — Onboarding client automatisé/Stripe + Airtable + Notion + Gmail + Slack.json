@@ -308,7 +308,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://hooks.slack.com/services/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",
+        "url": "VOTRE_WEBHOOK_SLACK_ICI",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"text\": \"🎉 Nouveau client onboardé !\\n\\n👤 *{{ $('Code in JavaScript1').item.json.client }}*\\n📧 {{ $('Code in JavaScript').item.json.email }}\\n💰 {{ $('Code in JavaScript').item.json.montant }}\\n📦 {{ $('Code in JavaScript').item.json.produit }}\\n\\n✅ Email de bienvenue envoyé\\n✅ Fiche Airtable créée\\n✅ 4 tâches Notion créées\"\n}",
