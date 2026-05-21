@@ -1,0 +1,784 @@
+{
+  "name": "Veille emploi automatique — TEMPLATE",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        32
+      ],
+      "id": "2b37ecf4-4c96-423b-908d-867eeeaae497",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst results = [];\n\nallItems.forEach(item => {\n  const jobs = item.json.results || [];\n  jobs.forEach(job => {\n    results.push({ json: {\n      id: String(job.id),\n      titre: job.title,\n      entreprise: job.company.display_name,\n      description: job.description.slice(0, 300),\n      lien: job.redirect_url,\n      date: job.created,\n      lieu: job.location.display_name\n    }});\n  });\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        80
+      ],
+      "id": "a574ed64-53a6-4afc-9083-33895c018e25",
+      "name": "Parser les offres"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4o"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert RH spécialisé en recrutement tech.\n\nVoici une offre d'emploi :\n- Titre : {{ $json.titre }}\n- Entreprise : {{ $json.entreprise }}\n- Description : {{ $json.description }}\n\nVoici le profil du candidat :\n- Compétences : [VOS_COMPETENCES — ex: n8n, Python, APIs REST, JavaScript...]\n- Formation : [VOTRE_FORMATION — ex: Master informatique]\n- Expérience : [VOTRE_EXPERIENCE — ex: 3 ans développeur web]\n\nScore cette offre de 0 à 100 selon le match avec le profil.\n\nRetourne UNIQUEMENT ce JSON :\n{\"score\": 85, \"raison\": \"...\", \"a_postuler\": true}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "55649b8e-16d6-4133-a173-cfc3e9050d94",
+      "name": "Scorer l'offre d'emploi",
+      "credentials": {
+        "openAiApi": {
+          "id": "VOTRE_CREDENTIAL_OPENAI_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.output[0].content[0].text;\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  try {\n    const parsed = JSON.parse(cleaned);\n    return { json: {\n      titre: item.json.titre,\n      entreprise: item.json.entreprise,\n      lien: item.json.lien,\n      score: parsed.score,\n      raison: parsed.raison,\n      a_postuler: parsed.a_postuler\n    }};\n  } catch(e) {\n    return { json: { erreur: 'parsing échoué', raw: raw }};\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        -48
+      ],
+      "id": "66583881-2130-4adb-90c6-fc45662c0f26",
+      "name": "Parser le score GPT"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1a6838e-9777-4a37-8997-4d0d731b58a9",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        -80
+      ],
+      "id": "a57c6795-ad35-4849-be86-44fb575db5cc",
+      "name": "Si score > 75"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4o"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un expert en rédaction de lettres de motivation pour des postes tech.\n\nOffre :\n- Titre : {{ $json.titre }}\n- Entreprise : {{ $json.entreprise }}\n- Raison du match : {{ $json.raison }}\n\nProfil du candidat :\n- Compétences : [VOS_COMPETENCES — ex: n8n, Python, APIs REST, JavaScript...]\n- Formation : [VOTRE_FORMATION — ex: Master informatique]\n- Expérience : [VOTRE_EXPERIENCE — ex: 3 ans développeur web]\n\nRédige une lettre de motivation courte (3 paragraphes max) pour ce poste.\nTon : professionnel mais moderne, direct et percutant.\nCommence directement par le contenu, sans \"Objet :\" ni formule d'en-tête.\nRetourne uniquement le texte de la lettre."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1904,
+        -128
+      ],
+      "id": "b3f1a2c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
+      "name": "Générer lettre de motivation",
+      "credentials": {
+        "openAiApi": {
+          "id": "VOTRE_CREDENTIAL_OPENAI_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const lettre = item.json.output[0].content[0].text;\n  return { json: {\n    titre: item.json.titre,\n    entreprise: item.json.entreprise,\n    lien: item.json.lien,\n    score: item.json.score,\n    raison: item.json.raison,\n    lettre: lettre.trim()\n  }};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2130,
+        -128
+      ],
+      "id": "c4d5e6f7-8a9b-0c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Préparer email"
+    },
+    {
+      "parameters": {
+        "sendTo": "VOTRE_EMAIL@gmail.com",
+        "subject": "=🎯 {{ $json.score }}/100 — {{ $json.titre }} chez {{ $json.entreprise }}",
+        "message": "=<h2>{{ $json.titre }}</h2>\n<p><strong>Entreprise :</strong> {{ $json.entreprise }}</p>\n<p><strong>Score :</strong> {{ $json.score }}/100</p>\n<p><strong>Pourquoi postuler :</strong> {{ $json.raison }}</p>\n<hr/>\n<h3>✉️ Lettre de motivation générée</h3>\n<p style=\"white-space: pre-line;\">{{ $json.lettre }}</p>\n<hr/>\n<p><a href=\"{{ $json.lien }}\">👉 Voir l'offre et postuler</a></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2360,
+        -128
+      ],
+      "id": "2adcdc7d-11dc-4bfe-a322-ae80f45a4fae",
+      "name": "Envoyer alerte email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VOTRE_CREDENTIAL_GMAIL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "VOTRE_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Offre d'emploi",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        16
+      ],
+      "id": "c1701a17-4c68-4ac2-b90c-e7a1d2b4f8b7",
+      "name": "Lire offres vues",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VOTRE_CREDENTIAL_GSHEETS_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const idsVus = $('Lire offres vues').all()\n  .map(item => String(item.json.id))\n  .filter(Boolean);\n\nconst offres = $('Remove Duplicates').all();\n\nreturn offres\n  .filter(item => !idsVus.includes(String(item.json.id)))\n  .map(item => ({ json: item.json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "4876f954-f450-4f4e-968e-0dd8de71a781",
+      "name": "Filtrer nouvelles offres"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "VOTRE_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Offre d'emploi",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "lien": "={{ $json.lien }}",
+            "date": "={{ new Date().toLocaleDateString('fr-FR') }}",
+            "titre": "={{ $json.titre }}",
+            "entreprise": "={{ $json.entreprise }}",
+            "score": "={{ $json.score }}",
+            "raison": "={{ $json.raison }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lien",
+              "displayName": "lien",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "titre",
+              "displayName": "titre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "entreprise",
+              "displayName": "entreprise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "raison",
+              "displayName": "raison",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        -80
+      ],
+      "id": "e8021cd2-1195-43e4-a523-ee956b78ccbd",
+      "name": "Sauvegarder l'offre",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VOTRE_CREDENTIAL_GSHEETS_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/fr/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "VOTRE_ADZUNA_APP_ID"
+            },
+            {
+              "name": "app_key",
+              "value": "VOTRE_ADZUNA_APP_KEY"
+            },
+            {
+              "name": "what",
+              "value": "MOT_CLE_RECHERCHE_1"
+            },
+            {
+              "name": "where",
+              "value": "VOTRE_VILLE"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -160
+      ],
+      "id": "38a3d570-8505-4921-b0fa-5bb36727cbb1",
+      "name": "Recherche 1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/fr/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "VOTRE_ADZUNA_APP_ID"
+            },
+            {
+              "name": "app_key",
+              "value": "VOTRE_ADZUNA_APP_KEY"
+            },
+            {
+              "name": "what",
+              "value": "MOT_CLE_RECHERCHE_2"
+            },
+            {
+              "name": "where",
+              "value": "VOTRE_VILLE"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -32
+      ],
+      "id": "69922272-1e7e-43c7-b92b-cb5b27d1e2e5",
+      "name": "Recherche 2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/fr/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "VOTRE_ADZUNA_APP_ID"
+            },
+            {
+              "name": "app_key",
+              "value": "VOTRE_ADZUNA_APP_KEY"
+            },
+            {
+              "name": "what",
+              "value": "MOT_CLE_RECHERCHE_3"
+            },
+            {
+              "name": "where",
+              "value": "VOTRE_VILLE"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        112
+      ],
+      "id": "96d34cdd-067e-40be-b151-ad0cc29ca157",
+      "name": "Recherche 3"
+    },
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/fr/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "VOTRE_ADZUNA_APP_ID"
+            },
+            {
+              "name": "app_key",
+              "value": "VOTRE_ADZUNA_APP_KEY"
+            },
+            {
+              "name": "what",
+              "value": "MOT_CLE_RECHERCHE_4"
+            },
+            {
+              "name": "where",
+              "value": "VOTRE_VILLE"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        256
+      ],
+      "id": "c5912a7b-49fa-4463-8a8e-cfdbc1be7eec",
+      "name": "Recherche 4"
+    },
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/fr/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "VOTRE_ADZUNA_APP_ID"
+            },
+            {
+              "name": "app_key",
+              "value": "VOTRE_ADZUNA_APP_KEY"
+            },
+            {
+              "name": "what",
+              "value": "MOT_CLE_RECHERCHE_5"
+            },
+            {
+              "name": "where",
+              "value": "VOTRE_VILLE"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        384
+      ],
+      "id": "ffff9acf-c621-4766-aa67-1648f3490880",
+      "name": "Recherche 5"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        48
+      ],
+      "id": "85781d03-80af-4799-b5d3-27a04995701c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        528,
+        64
+      ],
+      "id": "31938182-80f2-4f1b-9925-1896b53652ec",
+      "name": "Remove Duplicates"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Recherche 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Recherche 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Recherche 3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Recherche 4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Recherche 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser les offres": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scorer l'offre d'emploi": {
+      "main": [
+        [
+          {
+            "node": "Parser le score GPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser le score GPT": {
+      "main": [
+        [
+          {
+            "node": "Sauvegarder l'offre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sauvegarder l'offre": {
+      "main": [
+        [
+          {
+            "node": "Si score > 75",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Si score > 75": {
+      "main": [
+        [
+          {
+            "node": "Générer lettre de motivation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Générer lettre de motivation": {
+      "main": [
+        [
+          {
+            "node": "Préparer email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer email": {
+      "main": [
+        [
+          {
+            "node": "Envoyer alerte email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire offres vues": {
+      "main": [
+        [
+          {
+            "node": "Filtrer nouvelles offres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrer nouvelles offres": {
+      "main": [
+        [
+          {
+            "node": "Scorer l'offre d'emploi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recherche 1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recherche 2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Recherche 3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Recherche 4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Recherche 5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Parser les offres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Lire offres vues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
