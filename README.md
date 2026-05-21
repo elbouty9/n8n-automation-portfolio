@@ -13,6 +13,7 @@ agents IA et intégrations d'APIs.
 | 04 - Onboarding Stripe | n8n, Stripe, GPT, Airtable, Notion | 15 | ✅ |
 | 05 - Agent IA Email | n8n, Gmail, GPT, Calendar, Slack | 10+ | ✅ |
 | 06 - Multi-agents | n8n, GPT, Apify, Airtable | 50+ | ✅ |
+| 07 — Veille Emploi Automatique | n8n, Adzuna API, OpenAI GPT, Gmail, Google Sheets, JavaScript| 15+ | ✅ |
 
 ## 🛠 Stack
 n8n self-hosted VPS · OpenAI GPT · Stripe · 
