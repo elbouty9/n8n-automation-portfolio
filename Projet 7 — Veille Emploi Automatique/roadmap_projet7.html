@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Projet 7 — Veille Emploi Automatique</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f7ff;
+  --surface: #ffffff;
+  --border: #e0dff5;
+  --ink: #1a1a2e;
+  --accent1: #6c63ff;
+  --accent2: #00c488;
+  --accent3: #ff6b35;
+  --accent4: #ffb347;
+  --muted: #888899;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Space Mono', monospace; min-height: 100vh; padding: 40px 16px; }
+.topbar { width: 100%; height: 6px; background: var(--accent1); position: fixed; top: 0; left: 0; z-index: 100; }
+.header { max-width: 720px; margin: 20px auto 40px; border: 2px solid var(--ink); padding: 24px; background: var(--surface); position: relative; }
+.header::before { content: ''; position: absolute; top: 4px; left: 4px; right: -4px; bottom: -4px; background: var(--accent1); z-index: -1; }
+.header .num { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; line-height: 1; color: var(--accent1); }
+.header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 1.1; margin-top: -8px; }
+.header .sub { font-size: 0.7rem; color: var(--muted); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; letter-spacing: 1px; }
+.header .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tag { font-size: 0.62rem; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; font-weight: 700; }
+.tag-purple { background: var(--accent1); color: #fff; }
+.tag-green { background: var(--accent2); color: #fff; }
+.tag-orange { background: var(--accent3); color: #fff; }
+.tag-yellow { background: var(--accent4); color: #fff; }
+.pipeline { max-width: 720px; margin: 0 auto 32px; border: 2px solid var(--ink); background: var(--surface); padding: 20px; position: relative; }
+.pipeline::before { content: 'PIPELINE FINAL'; position: absolute; top: -11px; left: 16px; background: var(--bg); padding: 0 8px; font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); }
+.pipe-step { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-left: 3px solid var(--ink); margin-left: 16px; }
+.pipe-step.p1 { border-left-color: var(--accent1); }
+.pipe-step.p2 { border-left-color: var(--accent2); }
+.pipe-step.p3 { border-left-color: var(--accent3); }
+.pipe-step.p4 { border-left-color: var(--accent4); }
+.pipe-step .ps-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--muted); min-width: 24px; }
+.pipe-step .ps-text { font-size: 0.78rem; flex: 1; }
+.pipe-step .ps-badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; white-space: nowrap; font-weight: 700; }
+.badge-new { background: var(--accent1); color: #fff; }
+.badge-known { background: var(--accent2); color: #fff; }
+.pipe-connector { width: 2px; height: 14px; background: var(--border); margin-left: 28px; }
+.steps { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 3px; }
+.step { border: 2px solid var(--ink); background: var(--surface); position: relative; overflow: hidden; }
+.step::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+.step.s1::after { background: var(--accent1); }
+.step.s2::after { background: var(--accent2); }
+.step.s3::after { background: var(--accent3); }
+.step.s4::after { background: var(--accent4); }
+.step.s5::after { background: var(--accent1); }
+.step-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 20px; cursor: pointer; }
+.step-head:hover { background: var(--bg); }
+.step-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--border); min-width: 36px; line-height: 1; }
+.step-ico { font-size: 1.2rem; }
+.step-meta { flex: 1; }
+.step-title { font-size: 0.88rem; font-weight: 700; }
+.step-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.step-badge { font-size: 0.6rem; padding: 3px 10px; border-radius: 10px; white-space: nowrap; font-weight: 700; }
+.step-arr { color: var(--muted); font-size: 0.65rem; transition: transform 0.2s; }
+.step.open .step-arr { transform: rotate(90deg); color: var(--accent1); }
+.step-body { display: none; padding: 0 20px 20px 56px; border-top: 1px solid var(--border); }
+.step.open .step-body { display: block; }
+.step-body p { font-size: 0.8rem; color: var(--muted); line-height: 1.9; margin-top: 14px; }
+.step-body p strong { color: var(--ink); }
+.code { font-family: 'Space Mono', monospace; font-size: 0.72rem; background: var(--ink); color: #a8e6a3; padding: 14px; margin-top: 12px; line-height: 1.8; overflow-x: auto; border-radius: 4px; }
+.c1 { color: #a8e6a3; }
+.c2 { color: #87ceeb; }
+.c3 { color: #ffb347; }
+.bottom { max-width: 720px; margin: 24px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.bc { border: 2px solid var(--ink); background: var(--surface); padding: 16px; position: relative; }
+.bc::before { content: ''; position: absolute; top: 3px; left: 3px; right: -3px; bottom: -3px; background: var(--border); z-index: -1; }
+.bc-label { font-size: 0.6rem; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.bc-item { font-size: 0.75rem; padding: 5px 0; border-bottom: 1px dashed var(--border); display: flex; align-items: center; gap: 8px; }
+.bc-item:last-child { border-bottom: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-p { background: var(--accent1); }
+.dot-g { background: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+
+<div class="header">
+  <div class="num">07</div>
+  <h1>Veille Emploi<br>Automatique</h1>
+  <div class="sub">// SCRAPING · SCORING GPT · LETTRE DE MOTIVATION · ANTI-DOUBLON · CRON TRIGGER</div>
+  <div class="tags">
+    <span class="tag tag-purple">Adzuna API</span>
+    <span class="tag tag-green">GPT Scoring</span>
+    <span class="tag tag-orange">Lettre de motivation auto</span>
+    <span class="tag tag-yellow">Google Sheets</span>
+    <span class="tag tag-purple">Cron Trigger</span>
+  </div>
+</div>
+
+<div class="pipeline">
+  <div class="pipe-step p1">
+    <div class="ps-num">01</div>
+    <div class="ps-text">⏰ Cron Trigger — Lance la veille chaque matin à 9h</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p1">
+    <div class="ps-num">02</div>
+    <div class="ps-text">🔍 Adzuna API × 5 — Scrape 100+ offres sur 5 recherches simultanées</div>
+    <span class="ps-badge badge-new">NOUVEAU</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p2">
+    <div class="ps-num">03</div>
+    <div class="ps-text">🔀 Merge + Remove Duplicates — Fusionne et dédoublonne par ID unique</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p2">
+    <div class="ps-num">04</div>
+    <div class="ps-text">📋 Google Sheets — Vérifie les offres déjà vues (anti-doublon historique)</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p3">
+    <div class="ps-num">05</div>
+    <div class="ps-text">🤖 GPT — Score chaque offre 0-100 selon le profil candidat</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p3">
+    <div class="ps-num">06</div>
+    <div class="ps-text">✉️ GPT — Génère une lettre de motivation personnalisée par offre</div>
+    <span class="ps-badge badge-new">NOUVEAU</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p4">
+    <div class="ps-num">07</div>
+    <div class="ps-text">📬 Gmail — Envoie les meilleures offres + lettres par email</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+  <div class="pipe-connector"></div>
+  <div class="pipe-step p4">
+    <div class="ps-num">08</div>
+    <div class="ps-text">💾 Google Sheets — Sauvegarde pour éviter les doublons demain</div>
+    <span class="ps-badge badge-known">CONNU ✓</span>
+  </div>
+</div>
+
+<div class="steps">
+
+  <div class="step s1 open" id="s1">
+    <div class="step-head" onclick="t('s1')">
+      <div class="step-num">01</div><div class="step-ico">🔍</div>
+      <div class="step-meta">
+        <div class="step-title">Adzuna API — 5 recherches simultanées</div>
+        <div class="step-sub">nouvelle source d'offres · API gratuite · 100+ offres/jour</div>
+      </div>
+      <span class="step-badge" style="background:var(--accent1);color:#fff">NOUVEAU</span>
+      <div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Au lieu de chercher manuellement, 5 nodes <strong>HTTP Request</strong> tournent en parallèle avec des mots-clés différents. Résultat : 100+ offres récupérées en quelques secondes depuis l'API Adzuna.</p>
+      <div class="code">
+<span class="c3">Mots-clés :</span>
+<span class="c1">1. n8n
+2. automatisation workflow
+3. agent IA développeur
+4. chef de projet automatisation
+5. intégrateur no-code</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step s2" id="s2">
+    <div class="step-head" onclick="t('s2')">
+      <div class="step-num">02</div><div class="step-ico">🧹</div>
+      <div class="step-meta">
+        <div class="step-title">Dédoublonnage intelligent par ID unique</div>
+        <div class="step-sub">Remove Duplicates + Google Sheets historique</div>
+      </div>
+      <span class="step-badge" style="background:var(--accent2);color:#fff">CLÉ</span>
+      <div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Deux niveaux de déduplication — <strong>Remove Duplicates</strong> élimine les doublons dans la même exécution par ID Adzuna, et <strong>Google Sheets</strong> garde l'historique des offres déjà envoyées pour ne jamais recevoir deux fois la même offre.</p>
+    </div>
+  </div>
+
+  <div class="step s3" id="s3">
+    <div class="step-head" onclick="t('s3')">
+      <div class="step-num">03</div><div class="step-ico">🤖</div>
+      <div class="step-meta">
+        <div class="step-title">Scoring GPT + Lettre de motivation auto</div>
+        <div class="step-sub">match profil 0-100 · lettre personnalisée générée automatiquement</div>
+      </div>
+      <span class="step-badge" style="background:var(--accent3);color:#fff">NOUVEAU</span>
+      <div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>GPT analyse chaque offre selon ton profil exact et lui donne un score de 0 à 100. Seules les offres avec un score ≥ 75 passent. Pour chacune, GPT génère aussi une <strong>lettre de motivation personnalisée</strong> prête à envoyer !</p>
+    </div>
+  </div>
+
+  <div class="step s4" id="s4">
+    <div class="step-head" onclick="t('s4')">
+      <div class="step-num">04</div><div class="step-ico">📬</div>
+      <div class="step-meta">
+        <div class="step-title">Email récap — offres + lettres de motivation</div>
+        <div class="step-sub">une email par offre · score + raison + lien + lettre</div>
+      </div>
+      <span class="step-badge" style="background:var(--accent2);color:#fff">CONNU ✓</span>
+      <div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Pour chaque offre qui score ≥ 75, Gmail envoie un email avec le titre, l'entreprise, le score, la raison du match, le lien et la lettre de motivation. Tout est prêt — il reste juste à postuler !</p>
+    </div>
+  </div>
+
+  <div class="step s5" id="s5">
+    <div class="step-head" onclick="t('s5')">
+      <div class="step-num">05</div><div class="step-ico">🚀</div>
+      <div class="step-meta">
+        <div class="step-title">Bonus — Post LinkedIn viral + Documentation</div>
+        <div class="step-sub">workflow partagé publiquement · doc Notion · GitHub</div>
+      </div>
+      <span class="step-badge" style="background:var(--accent1);color:#fff">BONUS</span>
+      <div class="step-arr">▶</div>
+    </div>
+    <div class="step-body">
+      <p>Le workflow a été transformé en ressource publique partagée sur LinkedIn avec un post viral. La documentation complète est sur Notion et le JSON nettoyé sur GitHub pour que tout le monde puisse l'utiliser !</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom">
+  <div class="bc">
+    <div class="bc-label">// CE QUE TU AS APPRIS</div>
+    <div class="bc-item"><div class="dot dot-p"></div>Adzuna API (nouvelle source)</div>
+    <div class="bc-item"><div class="dot dot-p"></div>5 HTTP Requests en parallèle</div>
+    <div class="bc-item"><div class="dot dot-p"></div>Remove Duplicates par ID</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Anti-doublon historique Sheets</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Lettre de motivation auto GPT</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Documentation + post LinkedIn</div>
+  </div>
+  <div class="bc">
+    <div class="bc-label">// CE QUE TU DIS EN ENTRETIEN</div>
+    <div class="bc-item"><div class="dot dot-p"></div>Intégration API externe</div>
+    <div class="bc-item"><div class="dot dot-p"></div>Pipeline de données en parallèle</div>
+    <div class="bc-item"><div class="dot dot-p"></div>Déduplication multi-niveaux</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Scoring IA personnalisé</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Génération de contenu GPT</div>
+    <div class="bc-item"><div class="dot dot-g"></div>Workflow en production 24h/24</div>
+  </div>
+</div>
+
+<script>
+function t(id) { document.getElementById(id).classList.toggle('open'); }
+</script>
+</body>
+</html>
